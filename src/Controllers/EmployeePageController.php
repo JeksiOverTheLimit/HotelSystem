@@ -16,6 +16,7 @@ class EployeePageController
 {
     private const VIEW_PATH = "../Views/employees.html";
     private const VIEW_LIST_PATH = "../Views/EmployeeList.html";
+    private const NAV_PATH = "../Views/Navigations.html";
     private CitiesRepository $citiesRepository;
     private CountriesRepository $countriesRepository;
     private EmployeesRepository $employeesRepository;
@@ -25,28 +26,27 @@ class EployeePageController
         $this->citiesRepository = new CitiesRepository();
         $this->countriesRepository = new CountriesRepository();
         $this->employeesRepository = new EmployeesRepository();
-
+        
         $this->create();
         $this->update();
         $this->delete();
 
-        if(isset($_GET['Employees'])){
-        echo $this->showEmployeePage();
+        if (isset($_GET['Employees'])) {
+            echo $this->showEmployeePage();
         }
 
-        if(isset($_GET['EmployeeLists'])){
-        echo $this->showEmployeeList();
+        if (isset($_GET['EmployeeLists'])) {
+            echo $this->showEmployeeList();
         }
     }
 
     public function showEmployeePage(): string
     {
         $file = file_get_contents(self::VIEW_PATH);
-        $navigation = $this->generateNavigation();
         $citySelectMenu = $this->generateCitySelectMenu();
         $countrySelectMenu = $this->generateCountrySelectMenu();
-    
-        $result = sprintf($file, $navigation, $countrySelectMenu, $citySelectMenu);
+
+        $result = sprintf($file, $countrySelectMenu, $citySelectMenu);
 
         return $result;
     }
@@ -54,101 +54,50 @@ class EployeePageController
     public function showEmployeeList(): string
     {
         $file = file_get_contents(self::VIEW_LIST_PATH);
-        $navigation = $this->generateNavigation();
         $allEmployes = $this->showAllEmployees();
         $generateEditPopup = $this->generateUpdatePopupForm();
         $generateDeletePopup = $this->generateDeletePopup();
 
-        $result = sprintf($file, $navigation,  $allEmployes, $generateEditPopup, $generateDeletePopup);
+        $result = sprintf($file, $allEmployes, $generateEditPopup, $generateDeletePopup);
 
         return $result;
     }
 
-    private function generateNavigation(): string
+    private function generateCitySelectMenu(int $selectedCityId = null, int $selectedCountryId = null)
     {
-        $nav = '';
-        $nav .= "<nav class='navbar navbar-expand-sm bg-dark navbar-dark'>";
-        $nav .= "<div class='container-fluid'>";
-        $nav .= '<ul class="navbar-nav me-auto mb-2 mb-lg-0">';
-        $nav .= "<li class = 'nav-item'><a class='nav-link active' href='HomePageController.php'>Home</a></li>";
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Employee</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="EmployeePageController.php?Employees">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="EmployeePageController.php?EmployeeLists">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Payments</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="PaymentPageController.php?Payment">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="PaymentPageController.php?PaymentLists">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Currency</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="CurrencyPageController.php?Currency">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="CurrencyPageController.php?CurrencyList">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Rooms</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="RoomPageController.php?Rooms">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="RoomPageController.php?RoomLists">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Country</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="CountryPageController.php?Country">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="CountryPageController.php?CountryList">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Reservations</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="ReservationPageController.php?Reservation">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="ReservationPageController.php?ReservationLists">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= "</ul>";
-        $nav .= "</div>";
-        $nav .= "</nav>";
-
-        return $nav;
-    }
-
-    private function generateCitySelectMenu(int $selectedCityId = null): string
-    {
-        $cities = $this->citiesRepository->getAllCities();
-
-        $selectMenus = '<label for="cities" class="form-label">Cities</label>';
-        $selectMenus .= '<select class="form-select" name="City" id="cities">';
-
+        $countryId = isset($_GET['countryId']) ? intval($_GET['countryId']) : $selectedCountryId;
+        $cities = $this->citiesRepository->getCitiesByCountryId($countryId);
+    
+        $selectMenus = '';
+    
         foreach ($cities as $city) {
-            $optionTemplate = "<option value='%s' %s>%s</option>";
+            $optionTemplate = "<option value='%s'%s>%s</option>";
             $cityId = $city->getId();
             $cityName = $city->getName();
-            $selected = ($selectedCityId !== null && $selectedCityId === $cityId) ? "selected" : "";
+            $selected = ($selectedCityId !== null && $selectedCityId === $cityId) ? " selected" : "";
             $option = sprintf($optionTemplate, $cityId, $selected, $cityName);
             $selectMenus .= $option;
         }
-
-        $selectMenus .= "</select>";
-
-        return $selectMenus;
+    
+        if (!isset($_GET['countryId'])) {
+            return $selectMenus;
+        } else {
+            echo $selectMenus;
+            exit();
+        }
     }
+    
 
     private function generateCountrySelectMenu(int $selectedCountryId = null): string
     {
         $countries = $this->countriesRepository->getAllCountries();
-
-        $selectMenu = '<label for="countries" class="form-label">Contries</label>';
-        $selectMenu .= '<select class = "form-select" name="Country" id="countries">';
-
+        $selectMenu = '';
+        
+        if ($selectedCountryId === null) {
+            $placeholderOption = "<option value='' selected>Изберете държава</option>";
+            $selectMenu .= $placeholderOption;
+        }
+    
         foreach ($countries as $country) {
             $optionTemplate = "<option value='%s' %s>%s</option>";
             $countryId = $country->getId();
@@ -157,11 +106,10 @@ class EployeePageController
             $option = sprintf($optionTemplate, $countryId, $selected, $countryName);
             $selectMenu .= $option;
         }
-
-        $selectMenu .= "</select>";
-
+    
         return $selectMenu;
     }
+    
 
     private function create(): string
     {
@@ -210,8 +158,18 @@ class EployeePageController
         $form .= "<label for='phone'>Phone Number:</label>";
         $form .= "<input type='text' name='phone' value='" . $employee->getPhoneNumber() . "'>";
         $form .= "<br>";
+        $form .= '<div class="mb-3">';
+        $form .= '<label for="countries" class="form-label">Contries</label>';
+        $form .= '<select  class = "form-select" id="countries" name="Country" onchange="fetchCitiesByCountry()">';
         $form .= $this->generateCountrySelectMenu($employee->getCountryId());
-        $form .= $this->generateCitySelectMenu($employee->getCityId());
+        $form .= '</select>';
+        $form .= '</div>';
+        $form .= '<div class="mb-3">';
+        $form .= '<label for="cities" class="form-label">Cities</label>';
+        $form .= '<select class="form-select" id="cities" name="City">';
+        $form .= $this->generateCitySelectMenu($employee->getCityId(), $employee->getCountryId());
+        $form .= '</select>';
+        $form .= '</div>';
         $form .= "<input type='submit' name='update' value='update'>";
         $form .= "<input type='submit' name='cancel' value='cancel'>";
         $form .= "</form>";
@@ -222,6 +180,17 @@ class EployeePageController
         $form .= "document.getElementById('form-container').style.display = 'block';";
         $form .=  "document.getElementById('submitBTN').value = 'Edit Phone';";
         $form .=  "document.getElementById('newNumber').style.display = 'block';";
+
+        $form .= ' function fetchCitiesByCountry() { ';
+        $form .= 'const countryId = document.getElementById("countries").value; ';
+        $form .= ' fetch(`../Controllers/EmployeePageController.php?Employees&countryId=${countryId}`)';
+        $form .= ' .then(response => response.text()) ';
+        $form .= ' .then(result => { ';
+        $form .= 'document.getElementById("cities").innerHTML = result;
+                console.log(document.getElementById("cities").innerHTML = result);
+            })
+            .catch(error => console.error(error)); 
+    }';
         $form .= "</script>";
 
         return $form;

@@ -49,7 +49,7 @@ class ReservationsGuestsRepository
         $statement->execute();
     }
 
-    public function findById(int $id): ?ReservationsGuests
+    public function findById(?int $id): ?ReservationsGuests
     {
         $query = "SELECT id as id, reservation_id as reservationId, guest_id as guestId From reservations_guests_map Where id = :id";
 

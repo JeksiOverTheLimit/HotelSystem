@@ -68,26 +68,26 @@ class ReservationPageController
             echo "Грешка: " . $e->getMessage();
         }
 
-        if(isset($_GET['Reservation'])){
-        echo $this->showReservationPage();
+        if (isset($_GET['Reservation'])) {
+            echo $this->showReservationPage();
         }
 
-        if(isset($_GET['ReservationLists'])){
-          echo $this->showReservationList();
+        if (isset($_GET['ReservationLists'])) {
+            echo $this->showReservationList();
         }
     }
 
     public function showReservationPage(): string
     {
         $file = file_get_contents(self::VIEW_PATH);
-        $navigation = $this->generateNavigation();
         $employeeSelectMenu = $this->generateEmployeeSelectMenu();
         $roomSelectMenu = $this->generateRoomSelectMenu();
         $statusSelectMenu = $this->generateStatusSelectMenu();
+        
         $allCities = $this->generateCitySelectMenu();
         $allCountries = $this->generateCountrySelectMenu();
 
-        $result = sprintf($file, $navigation, $employeeSelectMenu, $roomSelectMenu, $statusSelectMenu, $allCities, $allCountries);
+        $result = sprintf($file, $employeeSelectMenu, $roomSelectMenu, $statusSelectMenu, $allCountries, $allCities);
 
         return $result;
     }
@@ -95,72 +95,15 @@ class ReservationPageController
     public function showReservationList(): string
     {
         $file = file_get_contents(self::VIEW_LIST_PATH);
-        $navigation = $this->generateNavigation();
         $generateEditPopup = $this->generateUpdatePopupForm();
         $allReservations = $this->showAllReservations();
         $generateDeletePopup = $this->generateDeletePopup();
 
-        $result = sprintf($file, $navigation, $allReservations, $generateEditPopup,$generateDeletePopup);
+        $result = sprintf($file, $allReservations, $generateEditPopup, $generateDeletePopup);
 
         return $result;
     }
 
-    private function generateNavigation(): string
-    {
-        $nav = '';
-        $nav .= "<nav class='navbar navbar-expand-sm bg-dark navbar-dark'>";
-        $nav .= "<div class='container-fluid'>";
-        $nav .= '<ul class="navbar-nav me-auto mb-2 mb-lg-0">';
-        $nav .= "<li class = 'nav-item'><a class='nav-link active' href='HomePageController.php'>Home</a></li>";
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Employee</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="EmployeePageController.php?Employees">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="EmployeePageController.php?EmployeeLists">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Payments</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="PaymentPageController.php?Payment">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="PaymentPageController.php?PaymentLists">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Currency</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="CurrencyPageController.php?Currency">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="CurrencyPageController.php?CurrencyList">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Rooms</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="RoomPageController.php?Rooms">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="RoomPageController.php?RoomLists">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Country</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="CountryPageController.php?Country">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="CountryPageController.php?CountryList">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Reservations</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="ReservationPageController.php?Reservation">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="ReservationPageController.php?ReservationLists">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= "</ul>";
-        $nav .= "</div>";
-        $nav .= "</nav>";
-
-        return $nav;
-    }
 
     private function generateEmployeeSelectMenu(int $selectedEmployeeId = null): string
     {
@@ -228,34 +171,41 @@ class ReservationPageController
         return $selectMenu;
     }
 
-    private function generateCitySelectMenu(int $selectedCityId = null): string
+    private function generateCitySelectMenu(int $selectedCityId = null, int $selectedCountryId = null)
     {
-        $cities = $this->citiesRepository->getAllCities();
-
-        $selectMenus = '<label for="cities" class="form-label">Cities</label>';
-        $selectMenus .= '<select class="form-select" name="City" id="cities">';
-
+        $countryId = isset($_GET['countryId']) ? intval($_GET['countryId']) : $selectedCountryId;
+        $cities = $this->citiesRepository->getCitiesByCountryId($countryId);
+    
+        $selectMenus = '';
+    
         foreach ($cities as $city) {
-            $optionTemplate = "<option value='%s' %s>%s</option>";
+            $optionTemplate = "<option value='%s'%s>%s</option>";
             $cityId = $city->getId();
             $cityName = $city->getName();
-            $selected = ($selectedCityId !== null && $selectedCityId === $cityId) ? "selected" : "";
+            $selected = ($selectedCityId !== null && $selectedCityId === $cityId) ? " selected" : "";
             $option = sprintf($optionTemplate, $cityId, $selected, $cityName);
             $selectMenus .= $option;
         }
-
-        $selectMenus .= "</select>";
-
-        return $selectMenus;
+    
+        if (!isset($_GET['countryId'])) {
+            return $selectMenus;
+        } else {
+            echo $selectMenus;
+            exit();
+        }
     }
+    
 
     private function generateCountrySelectMenu(int $selectedCountryId = null): string
     {
         $countries = $this->countriesRepository->getAllCountries();
-
-        $selectMenu = '<label for="countries" class="form-label">Contries</label>';
-        $selectMenu .= '<select class = "form-select" name="Country" id="countries">';
-
+        $selectMenu = '';
+        
+        if ($selectedCountryId === null) {
+            $placeholderOption = "<option value='' selected>Изберете държава</option>";
+            $selectMenu .= $placeholderOption;
+        }
+    
         foreach ($countries as $country) {
             $optionTemplate = "<option value='%s' %s>%s</option>";
             $countryId = $country->getId();
@@ -264,9 +214,7 @@ class ReservationPageController
             $option = sprintf($optionTemplate, $countryId, $selected, $countryName);
             $selectMenu .= $option;
         }
-
-        $selectMenu .= "</select>";
-
+    
         return $selectMenu;
     }
 
@@ -345,10 +293,16 @@ class ReservationPageController
         $form .= '<input type="text" class="form-control" name="phoneNumber" id="phoneNumberEdit" value=' . $guest->getPhoneNumber() . '>';
         $form .=  '</div>';
         $form .= '<div class="mb-3">';
-        $form .=  $this->generateCitySelectMenu($guest->getCityId());
+        $form .= '<label for="countries" class="form-label">Contries</label>';
+        $form .= '<select  class = "form-select" id="countries" name="Country" onchange="fetchCitiesByCountry()" >';
+        $form .= $this->generateCountrySelectMenu($guest->getCountryId());
+        $form .= '</select>';
         $form .= '</div>';
         $form .= '<div class="mb-3">';
-        $form .= $this->generateCountrySelectMenu($guest->getCountryId());
+        $form .= '<label for="cities" class="form-label">Cities</label>';
+        $form .= '<select class="form-select" id="cities" name="City">';
+        $form .=  $this->generateCitySelectMenu($guest->getCityId(), $guest->getCountryId());
+        $form .= '</select>';
         $form .= '</div>';
         $form .= '</fieldset>';
         $form .= '<button class="btn btn-primary" type="submit" name="update">Update</button>';
@@ -362,12 +316,22 @@ class ReservationPageController
         $form .= "document.getElementById('form-container').style.display = 'block';";
         $form .=  "document.getElementById('submitBTN').value = 'Edit Phone';";
         $form .=  "document.getElementById('newNumber').style.display = 'block';";
-        $form .= "</script>";
+        $form .= ' function fetchCitiesByCountry() { ';
+        $form .= 'const countryId = document.getElementById("countries").value; ';
+        $form .= ' fetch(`../Controllers/ReservationPageController.php?Reservation&countryId=${countryId}`)';
 
+        $form .= ' .then(response => response.text()) ';
+        $form .= ' .then(result => { ';
+        $form .= 'document.getElementById("cities").innerHTML = result;
+                    console.log(document.getElementById("cities").innerHTML = result);
+                })
+                .catch(error => console.error(error)); 
+        }';
+            $form .= "</script>";
         return $form;
     }
 
-    private function generateDeletePopup() : string
+    private function generateDeletePopup(): string
     {
         $isEditRequested = isset($_GET['deleteId']);
 
@@ -414,6 +378,8 @@ class ReservationPageController
         $result .= '<th>Final Date</th>';
         $result .= '<th>Reservation status</th>';
         $result .= '<th>Guest Names</th>';
+        $result .= '<th>Country</th>';
+        $result .= '<th>City</th>';
         $result .= '<th>Actions</th>';
 
         $result .= '</tr></thead>';
@@ -433,10 +399,9 @@ class ReservationPageController
 
             $rooms = $this->roomsRepository->findById($reservation->getRoomId());
 
-            if($rooms != null){
-            $result .= "<td>" . $rooms->getNumber() . "</td>";
-            }
-            else {
+            if ($rooms != null) {
+                $result .= "<td>" . $rooms->getNumber() . "</td>";
+            } else {
                 $result .= "<td>Room not exist</td>";
             }
 
@@ -447,6 +412,11 @@ class ReservationPageController
             $reservationGuest  = $this->reservationGuestsRepository->findByReservationId($reservation->getId());
             $guest = $this->guestsRepository->findById($reservationGuest->getGuestId());
             $result .= "<td>" . $guest->getFirstName() . " " . $guest->getLastName() . "</td>";
+            $country = $this->countriesRepository->findById($guest->getCountryId());
+            $result .= "<td>" . $country->getName() . "</td>";
+
+            $city = $this->citiesRepository->findById($guest->getCityId());
+            $result .= "<td>" . $city->getName() . "</td>";
             $result .= '<td><div class="dropdown"><button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"></button>';
             $result .= '<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">';
 

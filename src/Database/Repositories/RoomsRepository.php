@@ -90,6 +90,17 @@ class RoomsRepository
 
         return $result;
     }
+
+    public function filterRoomByTypeId(?int $typeId) :? array {
+        $query = "SELECT id as id, number as number, type_id as typeId, price as price FROM rooms Where type_id = :typeId";
+    
+        $statement = $this->database->getConnection()->prepare($query);
+        $statement->bindParam(":typeId", $typeId);
+        $statement->execute();
+    
+        $result = $statement->fetchAll(PDO::FETCH_CLASS, "Rooms");
+        return $result;
+    }
 }
 
 

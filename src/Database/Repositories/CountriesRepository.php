@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 class CountriesRepository
@@ -38,13 +39,18 @@ class CountriesRepository
 
     public function delete(int $id): void
     {
-        $query = "DELETE from countries Where id = :id";
-
+        $query = "DELETE FROM cities WHERE country_id = :countryId";
         $connection = $this->database->getConnection();
         $statement = $connection->prepare($query);
-        $statement->bindParam(':id', $id);
+        $statement->bindParam(':countryId', $id);
+        $statement->execute();
+
+        $query = "DELETE FROM countries WHERE id = :countryId";
+        $statement = $connection->prepare($query);
+        $statement->bindParam(':countryId', $id);
         $statement->execute();
     }
+
 
     public function findById(int $id): ?Countries
     {
@@ -71,5 +77,4 @@ class CountriesRepository
 
         return $result;
     }
-
 }

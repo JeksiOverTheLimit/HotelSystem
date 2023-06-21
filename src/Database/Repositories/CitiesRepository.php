@@ -72,4 +72,18 @@ class CitiesRepository
 
         return $result;
     }
+
+    public function getCitiesByCountryId(?int $countryId): ?array
+    {
+        $query = "SELECT id as id, name as name, country_id as countryId  FROM cities Where country_id = :countryId";
+
+        $connection = $this->database->getConnection();
+        $statement = $connection->prepare($query);
+        $statement->bindParam(':countryId', $countryId);
+        $statement->execute();
+
+        $result = $statement->fetchAll(PDO::FETCH_CLASS, "Cities");
+
+        return $result;
+    }
 }

@@ -82,6 +82,8 @@ class EmployeesRepository
 
         $result = $statement->fetchAll(PDO::FETCH_CLASS, "Employees");
 
+    
         return $result;
     }
+
 }

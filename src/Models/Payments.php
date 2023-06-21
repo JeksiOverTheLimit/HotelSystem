@@ -15,7 +15,7 @@ class Payments
         return $this->reservationId;
     }
 
-    public function setReservationId(int $value) {
+    public function setReservationId(int $value): void {
         $this->reservationId = $value;
     }
 

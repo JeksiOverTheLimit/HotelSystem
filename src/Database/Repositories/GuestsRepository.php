@@ -74,7 +74,7 @@ class GuestsRepository
         $statement->execute();
     }
 
-    public function findById(int $id): ?Guests
+    public function findById(?int $id): ?Guests
     {
         $query = "SELECT id as id, first_name as firstName, last_name as lastName, egn as egn, phone_number as phoneNumber, country_id as countryId, city_id as cityId From guests Where id = :id";
 

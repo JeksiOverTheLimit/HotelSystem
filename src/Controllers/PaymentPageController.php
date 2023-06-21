@@ -15,6 +15,7 @@ $payment = new PaymentPageController();
 class PaymentPageController
 {
     private const VIEW_PATH = "../Views/Payment.html";
+    private const VIEW_LIST_PATH = "../Views/PaymentLists.html";
     private PaymentsRepository $paymentsRepository;
     private CurrenciesRepository $currenciesRepository;
     private ReservationsRepository $reservationsRepository;
@@ -25,88 +26,48 @@ class PaymentPageController
         $this->currenciesRepository = new CurrenciesRepository();
         $this->reservationsRepository = new ReservationsRepository();
 
-        echo $this->showCountryPage();
+        
         $this->create();
         $this->update();
         $this->delete();
+
+        if (isset($_GET['Payment'])) {
+            echo $this->showPaymentPage();
+        }
+
+        if (isset($_GET['PaymentLists'])) {
+            echo $this->showPaymentLists();
+        }
     }
 
-    public function showCountryPage(): string
+    public function showPaymentPage(): string
     {
         $file = file_get_contents(self::VIEW_PATH);
-        $navigation = $this->generateNavigation();
-        $allPayments = $this->showAllPayments();
         $allReservations = $this->generateReservationsSelectMenu();
         $allCurrencies = $this->generateCurrecySelectMenu();
-        $generateEditPopup = $this->generateUpdatePopupForm();
-
-        $result = sprintf($file, $navigation,$allReservations,$allCurrencies ,$allPayments, $generateEditPopup);
+        
+        $result = sprintf($file, $allReservations, $allCurrencies);
 
         return $result;
     }
 
-    private function generateNavigation(): string
+    public function showPaymentLists(): string
     {
-        $nav = '';
-        $nav .= "<nav class='navbar navbar-expand-sm bg-dark navbar-dark'>";
-        $nav .= "<div class='container-fluid'>";
-        $nav .= '<ul class="navbar-nav me-auto mb-2 mb-lg-0">';
-        $nav .= "<li class = 'nav-item'><a class='nav-link active' href='HomePageController.php'>Home</a></li>";
+        $file = file_get_contents(self::VIEW_LIST_PATH);
+             
+        $allEmployes = $this->showAllPayments();
+        $generateEditPopup = $this->generateUpdatePopupForm();
+        $generateDeletePopup = $this->generateDeletePopup();
 
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Employee</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="EmployeePageController.php?Employees">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="EmployeePageController.php?EmployeeLists">Lists</a></li>';
-        $nav .= '</ul></li>';
+        $result = sprintf($file,  $allEmployes, $generateEditPopup, $generateDeletePopup);
 
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Payments</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="PaymentPageController.php?Payment">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="PaymentPageController.php?PaymentLists">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Currency</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="CurrencyPageController.php?Currency">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="CurrencyPageController.php?CurrencyList">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Rooms</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="RoomPageController.php?Rooms">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="RoomPageController.php?RoomLists">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Country</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="CountryPageController.php?Country">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="CountryPageController.php?CountryList">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= '<li class="nav-item dropdown">';
-        $nav .= '<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Reservations</a>';
-        $nav .= '<ul class="dropdown-menu" aria-labelledby="navbarDropdown">';
-        $nav .= '<li><a class="dropdown-item" href="ReservationPageController.php?Reservation">Create</a></li>';
-        $nav .= '<li><a class="dropdown-item" href="ReservationPageController.php?ReservationLists">Lists</a></li>';
-        $nav .= '</ul></li>';
-
-        $nav .= "</ul>";
-        $nav .= "</div>";
-        $nav .= "</nav>";
-
-        return $nav;
+        return $result;
     }
-
 
     private function generateReservationsSelectMenu(int $selectedReservationId = null): string
     {
         $reservations = $this->reservationsRepository->getAllReservations();
-    
+
         $selectMenus = '<label for="reservationId" class="form-label">Choose Reservation</label>';
         $selectMenus .= '<select class="form-select" name="reservationId" id="reservationId">';
 
@@ -116,7 +77,7 @@ class PaymentPageController
             $reservationStartingDate = $reservation->getStartingDate();
             $reservationFinalDate = $reservation->getFinalDate();
             $selected = ($selectedReservationId !== null && $selectedReservationId === $reservationId) ? "selected" : "";
-            $option = sprintf($optionTemplate, $reservationId, $selected, $reservationId,$reservationStartingDate, $reservationFinalDate);
+            $option = sprintf($optionTemplate, $reservationId, $selected, $reservationId, $reservationStartingDate, $reservationFinalDate);
             $selectMenus .= $option;
         }
 
@@ -129,7 +90,7 @@ class PaymentPageController
     private function generateCurrecySelectMenu(int $selectedCurrencyId = null): string
     {
         $currencies = $this->currenciesRepository->getAllCurrencies();
-    
+
         $selectMenus = '<label for="currencyId" class="form-label">Choose Currency</label>';
         $selectMenus .= '<select class="form-select" name="currencyId" id="currencyId">';
 
@@ -156,23 +117,53 @@ class PaymentPageController
 
         $paymentId = intval($_GET['editId']);
         $payment = $this->paymentsRepository->findById($paymentId);
-        
+
 
         $form = "<div id='overlay'></div>";
         $form .= "<div id = 'form-container'>";
-        $form .= "<form method='POST' action='../Controllers/CountryPageController.php'>";
-        $form .= "<input type='hidden' name='countryId' value='" . $payment->getReservationId() . "'>";
-        
+        $form .= "<form method='POST' action='../Controllers/PaymentPageController.php?PaymentLists'>";
+        $form .= "<input type='hidden' name='paymentId' value='" . $payment->getReservationId() . "'>";
         $currency = $this->currenciesRepository->findById($payment->getCurrencyId());
-        $form .= "<label for='currency'>Currency</label>";
-        $form .= "<input type='text' name='currency' id='currency' value='" . $currency->getName() . "'>";
-        
+       
+        $form .=  $this->generateCurrecySelectMenu($currency->getId());
+
         $form .= "<label for='price'>Price:</label>";
         $form .= "<input type='text' name='price' id='price' value='" . $payment->getPrice() . "'>";
         $form .= '<label for="paymentDate" class="form-label">Payment Date</label>';
         $form .= "<input type='date' class='form-control' name='paymentDate' id='paymentDate' value=" . $payment->getPaymentDate() . ">";
         $form .= "<br>";
         $form .= "<input type='submit' name='update' value='update'>";
+        $form .= "<input type='submit' name='cancel' value='cancel'>";
+        $form .= "</form>";
+        $form .= "</div>";
+
+        $form .= "<script>";
+        $form .= "document.getElementById('overlay').style.display = 'block';";
+        $form .= "document.getElementById('form-container').style.display = 'block';";
+        $form .=  "document.getElementById('submitBTN').value = 'Edit Phone';";
+        $form .=  "document.getElementById('newNumber').style.display = 'block';";
+        $form .= "</script>";
+
+        return $form;
+    }
+
+    private function generateDeletePopup(): string
+    {
+        $isEditRequested = isset($_GET['deleteId']);
+
+        if (!$isEditRequested) {
+            return '';
+        }
+
+        $paymentId = intval($_GET['deleteId']);
+        $payment = $this->paymentsRepository->findById($paymentId);
+
+        $form = "<div id='overlay'></div>";
+        $form .= "<div id = 'form-container'>";
+        $form .= "<form method='POST' action='../Controllers/PaymentPageController.php?PaymentLists'>";
+        $form .= "<input type='hidden' name='reservationId' value='" . $payment->getReservationId() . "'>";
+        $form .= '<p class="text-center">Are you sure to delete this payment?</p>';
+        $form .= "<input type='submit' name='delete' value='delete'>";
         $form .= "<input type='submit' name='cancel' value='cancel'>";
         $form .= "</form>";
         $form .= "</div>";
@@ -195,11 +186,14 @@ class PaymentPageController
             return '';
         }
 
-        $name = htmlspecialchars($_POST['name']);
+        $reservationId = htmlspecialchars($_POST['reservationId']);
+        $currencyId = htmlspecialchars($_POST['currencyId']);
+        $price = htmlspecialchars($_POST['price']);
+        $paymentDate = htmlspecialchars($_POST['paymentDate']);
 
-        $this->paymentsRepository->create($name);
+        $this->paymentsRepository->create(intval($reservationId), intval($currencyId), floatval($price), $paymentDate);
 
-        header("Location: ../Controllers/CountryPageController.php");
+        header("Location: ../Controllers/PaymentPageController.php?PaymentLists");
     }
 
     private function showAllPayments(): string
@@ -208,24 +202,33 @@ class PaymentPageController
         $result = '';
 
         $result .= "<div class='container mt-3'>";
-        $result .= "<table class ='table table-striped'>";
+        $result .= '<table class ="table table-primary table-striped">';
+        $result .= "<thead>";
         $result .= "<tr>";
-        $result .= "<th>Currency Name</th>";
+        $result .= "<th>Payments Name</th>";
+        $result .= "<th>Price</th>";
+        $result .= "<th>Currency</th>";
+        $result .= "<th>Opstions</th>";
         $result .= "</tr>";
+        $result .= "</thead>";
 
         foreach ($payments as $payment) {
+            $result .= "<tbody>";
             $result .= "<tr>";
             $result .= "<td>" . $payment->getReservationId() . "</td>";
             $result .= "<td>" . $payment->getPrice() . "</td>";
-            $result .= "<td>" . $payment->getCurrencyId() . "</td>";
+            $currency = $this->currenciesRepository->findById($payment->getCurrencyId());
+            $result .= "<td>" . $currency->getName() . "</td>";
 
-            $result .= "<td>";
-            $result .= "<a href='../Controllers/CountryPageController.php?deleteId=" . $payment->getReservationId() . "'>Delete</a>";
-            $result .= " | ";
-            $result .= "<a href='../Controllers/CountryPageController.php?editId=" . $payment->getReservationId() . "'>Edit</a>";
-            $result .= "</td>";
+            $result .= '<td><div class="dropdown"><button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"></button>';
+            $result .= '<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">';
+
+            $result .= "<li><a class='dropdown-item' href='../Controllers/PaymentPageController.php?PaymentLists&deleteId=" . $payment->getReservationId() . "'>Delete</a></li>";
+            $result .= "<li><a class='dropdown-item' href='../Controllers/PaymentPageController.php?PaymentLists&editId=" . $payment->getReservationId() . "'>Edit</a></li>";
+            $result .= '</ul></div></td>';
 
             $result .= "</tr>";
+            $result .="</tbody>";
         }
 
         $result .= "</table>";
@@ -245,29 +248,30 @@ class PaymentPageController
         $isCancelEditIncome = isset($_POST['cancel']);
 
         if ($isCancelEditIncome) {
-            header("Location: ../Controllers/CurrencyPageController.php");
+            header("Location: ../Controllers/PaymentPageController.php?PaymentLists");
             exit();
         }
 
-        $countryId = intval($_POST['countryId']);
-        $name = htmlspecialchars($_POST['name']);
+        $reservationId = htmlspecialchars($_POST['paymentId']);
+        $currencyId = htmlspecialchars($_POST['currencyId']);
+        $price = htmlspecialchars($_POST['price']);
+        $paymentDate = htmlspecialchars($_POST['paymentDate']);
+        $this->paymentsRepository->update(intval($reservationId), intval($currencyId), floatval($price), $paymentDate);
 
-        $this->paymentsRepository->update($countryId, $name);
-
-        header("Location: ../Controllers/CountryPageController.php");
+        header("Location: ../Controllers/PaymentPageController.php?PaymentLists");
     }
 
     private function delete(): string
     {
-        $isPostIncome = isset($_GET['deleteId']);
+        $isPostIncome = isset($_POST['delete']);
 
         if (!$isPostIncome) {
             return '';
         }
 
-        $paymentId = intval($_GET['deleteId']);
+        $paymentId = intval($_POST['reservationId']);
         $this->paymentsRepository->delete($paymentId);
 
-        header("Location: ../Controllers/CountryPageController.php");
+        header("Location: ../Controllers/PaymentPageController.php?PaymentLists");
     }
 }

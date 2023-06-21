@@ -25,18 +25,15 @@ class PaymentsRepository
         $statement->bindParam(':paymentDate', $paymentDate);
         $statement->execute();
 
-        $id = $connection->lastInsertId();
-
-        return $this->findById(intval($id));
+        return $this->findById(intval($reservationId));
     }
 
-    public function update(int $id, int $reservationId, int $currencyId, float $price, string $paymentDate): void
+    public function update(int $reservationId, int $currencyId, float $price, string $paymentDate): void
     {
-        $query = "UPDATE payments SET reservation_id = :reservationId, currency_id = :currencyId, price = :price, payment_date = :paymentDate WHERE id = :id";
+        $query = "UPDATE payments SET currency_id = :currencyId, price = :price, payment_date = :paymentDate WHERE reservation_id = :reservationId";
 
         $connection = $this->database->getConnection();
         $statement = $connection->prepare($query);
-        $statement->bindParam(':id', $id);
         $statement->bindParam(':reservationId', $reservationId);
         $statement->bindParam(':currencyId', $currencyId);
         $statement->bindParam(':price', $price);
@@ -46,7 +43,7 @@ class PaymentsRepository
 
     public function delete(int $id): void
     {
-        $query = "DELETE from payments Where id = :id";
+        $query = "DELETE from payments Where reservation_id = :id";
 
         $connection = $this->database->getConnection();
         $statement = $connection->prepare($query);
@@ -54,13 +51,13 @@ class PaymentsRepository
         $statement->execute();
     }
 
-    public function findById(int $id): ?Payments
+    public function findById(int $reservationId): ?Payments
     {
-        $query = "SELECT reservation_id as reservationId, currency_id as currencyId, price as price, payment_date as paymentDate From guests Where id = :id";
+        $query = "SELECT reservation_id as reservationId, currency_id as currencyId, price as price, payment_date as paymentDate From payments Where reservation_id = :reservationId";
 
         $connection = $this->database->getConnection();
         $statement = $connection->prepare($query);
-        $statement->bindParam(':id', $id);
+        $statement->bindParam(':reservationId', $reservationId);
         $statement->execute();
 
         $payments = $statement->fetchObject(Payments::class) ?: null;
@@ -70,7 +67,7 @@ class PaymentsRepository
 
     public function getAllPayments() : array
     {
-        $query = "SELECT reservation_id as reservationid, currency_id  as currencyId, price as price, payment_date as paymentDate FROM payments";
+        $query = "SELECT reservation_id as reservationId, currency_id  as currencyId, price as price, payment_date as paymentDate FROM payments";
 
         $statement = $this->database->getConnection()->prepare($query);
         $statement->execute();

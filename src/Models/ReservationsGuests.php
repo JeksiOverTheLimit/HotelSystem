@@ -5,7 +5,7 @@ declare(strict_types=1);
 class ReservationsGuests extends BaseId
 {
     private int $reservationId;
-    private int $guestId;
+    private ?int $guestId;
 
     public function getReservationId(): int
     {
@@ -17,7 +17,7 @@ class ReservationsGuests extends BaseId
         $this->reservationId = $value;
     }
 
-    public function getGuestId(): int
+    public function getGuestId(): ?int
     {
         return $this->guestId;
     }

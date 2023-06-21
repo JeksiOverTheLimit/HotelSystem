@@ -10,25 +10,19 @@
     <script src="../../assets/js/nav.js"></script>
 </head>
 
-
 <body>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id = "navigation-placeholder">
     </nav>
+
     <main>
-    <h1 class="text-center">You want to make a currency?</h1>
-
-    <div class="container">
-    <form '../Controllers/CurrencyPageController.php' method="post">
-        <div class="guest-fields mb-3">
-            <label for="name" class="form-label ">Name of Currency</label>
-            <input type="text" class="form-control" name="name" id="name">
+        <h1 class="text-center">All Payments!</h1>
         </div>
-
-        <div class="mb-3">
-            <button class="btn btn-primary" type="submit" name="submit">Send</button>
+        <div class="container">
+            %s
+            <div class="content"></div>
+            %s
         </div>
-    </form>
-    </div>
+        %s
     </main>
 </body>
 
