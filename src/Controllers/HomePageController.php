@@ -2,13 +2,10 @@
 
 declare(strict_types=1);
 
-
-
 $callController = new HomePageController();
 
 class HomePageController
 {
-
     private const VIEW_PATH = "../Views/index.html";
 
     public function __construct()

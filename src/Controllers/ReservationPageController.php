@@ -2,31 +2,32 @@
 
 declare(strict_types=1);
 
-include_once  "../Models/Cities.php";
-include_once  "../Database/Repositories/RoomsRepository.php";
+include_once  "../Database/Repositories/RoomRepository.php";
 include_once "../Database/database.php";
-include_once "../Models/Employees.php";
-include_once "../Models/RoomTypes.php";
-include_once "../Database/Repositories/RoomTypesRepository.php";
-include_once "../Models/Rooms.php";
-include_once "../Database/Repositories/ReservationsRepository.php";
-include_once "../Models/Reservations.php";
+include_once "../Models/RoomType.php";
+include_once "../Database/Repositories/RoomTypeRepository.php";
+include_once "../Models/Room.php";
+include_once "../Database/Repositories/ReservationRepository.php";
+include_once "../Models/Reservation.php";
 include_once "../Models/ReservationStatus.php";
 include_once "../Database/Repositories/ReservationStatusRepository.php";
-include_once "../Models/Employees.php";
-include_once "../Database/Repositories/EmployeesRepository.php";
-include_once "../Models/Cities.php";
-include_once "../Database/Repositories/CitiesRepository.php";
-include_once "../Models/Countries.php";
-include_once "../Database/Repositories/CountriesRepository.php";
-include_once "../Models/Guests.php";
-include_once "../Database/Repositories/GuestsRepository.php";
-include_once "../Models/ReservationsGuests.php";
-include_once "../Database/Repositories/ReservationsGuestsRepository.php";
-include_once "../Models/RoomExtras.php";
-include_once "../Database/Repositories/RoomExtrasRepository.php";
-include_once "../Database/Repositories/RoomsExtrasMapRepository.php";
-include_once "../Models/RoomExtrasMap.php";
+include_once "../Models/Employee.php";
+include_once "../Database/Repositories/EmployeeRepository.php";
+include_once "../Models/City.php";
+include_once "../Database/Repositories/CityRepository.php";
+include_once "../Models/Country.php";
+include_once "../Database/Repositories/CountryRepository.php";
+include_once "../Models/Guest.php";
+include_once "../Database/Repositories/GuestRepository.php";
+include_once "../Models/ReservationGuest.php";
+include_once "../Database/Repositories/ReservationGuestRepository.php";
+include_once "../Models/RoomExtra.php";
+include_once "../Database/Repositories/RoomExtraRepository.php";
+include_once "../Database/Repositories/RoomExtraMapRepository.php";
+include_once "../Models/RoomExtraMap.php";
+include_once "../Controllers/SelectMenuHelper.php";
+include_once "../Database/Repositories/PaymentRepository.php";
+include_once "../Models/Payment.php";
 
 $callController = new ReservationPageController();
 
@@ -34,187 +35,302 @@ class ReservationPageController
 {
     private const VIEW_PATH = "../Views/Reservations.html";
     private const VIEW_LIST_PATH = "../Views/ReservationList.html";
-    private RoomsRepository $roomsRepository;
-    private RoomTypesRepository $roomTypesRepository;
-    private ReservationsRepository $reservationsRepository;
+    private RoomRepository $roomsRepository;
+    private RoomTypeRepository $roomTypesRepository;
+    private ReservationRepository $reservationsRepository;
     private ReservationStatusRepository $reservationStatusRepository;
-    private ReservationsGuestsRepository $reservationGuestsRepository;
-    private EmployeesRepository $employeesRepository;
-    private CitiesRepository $citiesRepository;
-    private CountriesRepository $countriesRepository;
-    private GuestsRepository $guestsRepository;
-    private RoomExtrasRepository $roomExtrasRepository;
-    private RoomsExtrasMapRepository $roomExtrasMapRepository;
+    private ReservationGuestRepository $reservationGuestsRepository;
+    private EmployeeRepository $employeesRepository;
+    private CityRepository $citiesRepository;
+    private CountryRepository $countriesRepository;
+    private GuestRepository $guestsRepository;
+    private RoomExtraRepository $roomExtrasRepository;
+    private RoomExtraMapRepository $roomExtrasMapRepository;
+    private SelectMenuHelper $selectMenuHelper;
+    private PaymentRepository $paymentsRepository;
 
     public function __construct()
     {
-        $this->roomsRepository = new RoomsRepository();
-        $this->roomTypesRepository = new RoomTypesRepository();
-        $this->reservationsRepository = new ReservationsRepository();
+        $this->roomsRepository = new RoomRepository();
+        $this->roomTypesRepository = new RoomTypeRepository();
+        $this->reservationsRepository = new ReservationRepository();
         $this->reservationStatusRepository = new ReservationStatusRepository();
-        $this->employeesRepository = new EmployeesRepository();
-        $this->citiesRepository = new CitiesRepository();
-        $this->countriesRepository = new CountriesRepository();
-        $this->guestsRepository = new GuestsRepository();
-        $this->reservationGuestsRepository = new ReservationsGuestsRepository();
-        $this->roomExtrasRepository = new RoomExtrasRepository();
-        $this->roomExtrasMapRepository = new RoomsExtrasMapRepository();
+        $this->employeesRepository = new EmployeeRepository();
+        $this->citiesRepository = new CityRepository();
+        $this->countriesRepository = new CountryRepository();
+        $this->guestsRepository = new GuestRepository();
+        $this->reservationGuestsRepository = new ReservationGuestRepository();
+        $this->roomExtrasRepository = new RoomExtraRepository();
+        $this->roomExtrasMapRepository = new RoomExtraMapRepository();
+        $this->selectMenuHelper = new SelectMenuHelper();
+        $this->paymentsRepository = new PaymentRepository();
 
-        try {
-            $this->create();
-            $this->update();
-            $this->delete();
-        } catch (Exception $e) {
-            echo "Грешка: " . $e->getMessage();
-        }
-
-        if (isset($_GET['Reservation'])) {
-            echo $this->showReservationPage();
-        }
-
-        if (isset($_GET['ReservationLists'])) {
-            echo $this->showReservationList();
+        switch (true) {
+            case isset($_POST['submit']):
+                try {
+                    $this->create();
+                } catch (Exception $e) {
+                    echo "Грешка: " . $e->getMessage();
+                }
+                break;
+            case isset($_POST['update']):
+                try {
+                    $this->update();
+                } catch (Exception $e) {
+                    echo "Грешка: " . $e->getMessage();
+                }
+                break;
+            case isset($_POST['delete']):
+                try {
+                    $this->delete();
+                } catch (Exception $e) {
+                    echo "Грешка: " . $e->getMessage();
+                }
+                break;
+            case isset($_GET['Reservation']):
+                echo $this->showReservationPage();
+                break;
+            case isset($_GET['ReservationLists']):
+                echo $this->showReservationList();
+                break;
+            case isset($_GET['Edit']):
+                echo $this->showUpdatePage();
+                break;
+            case isset($_GET['guestPrivatePageId']):
+                try {
+                    echo $this->showPrivatePage();
+                } catch (Exception $e) {
+                    echo "Грешка: " . $e->getMessage();
+                }
+                break;
         }
     }
 
-    public function showReservationPage(): string
+    private function showPrivatePage()
     {
-        $file = file_get_contents(self::VIEW_PATH);
+        $guestId = intval($_GET['guestPrivatePageId']);
+
+        $guestReservationsDate = [];
+        $guestInformations = [];
+
+        $findedGuest = $this->guestsRepository->findById($guestId);
+
+        $guestData = $this->generateGuestDate($findedGuest);
+
+        foreach ($guestData as $guest) {
+            $guestInformations[] = [
+                'firstName' => $guest['firstName'],
+                'lastName' => $guest['lastName'],
+                'egn' => $guest['egn'],
+                'phone' => $guest['phone'],
+                'country' => $guest['country'],
+                'city' => $guest['city']
+            ];
+        }
+
+        $reservations = $this->generateReservationForGuest($findedGuest);
+
+        foreach ($reservations as $reservation) {
+            $guestReservationsDate[] = [
+                'startingDate' => $reservation['startingDate'],
+                'finalDate' => $reservation['finalDate'],
+                'number' => $reservation['number']
+            ];
+        }
+        require_once '../Views/guest_privatepage.php';
+    }
+
+    private function showReservationPage(): void
+    {
         $employeeSelectMenu = $this->generateEmployeeSelectMenu();
         $roomSelectMenu = $this->generateRoomSelectMenu();
         $statusSelectMenu = $this->generateStatusSelectMenu();
-        
-        $allCities = $this->generateCitySelectMenu();
-        $allCountries = $this->generateCountrySelectMenu();
+        $countrySelectMenu = $this->selectMenuHelper->generateCountrySelectMenu();
+        $citySelectMenu = $this->selectMenuHelper->generateCitySelectMenu();
 
-        $result = sprintf($file, $employeeSelectMenu, $roomSelectMenu, $statusSelectMenu, $allCountries, $allCities);
-
-        return $result;
+        require_once "../Views/Reservations.php";
     }
 
-    public function showReservationList(): string
+    private function showReservationList(): void
     {
-        $file = file_get_contents(self::VIEW_LIST_PATH);
-        $generateEditPopup = $this->generateUpdatePopupForm();
-        $allReservations = $this->showAllReservations();
-        $generateDeletePopup = $this->generateDeletePopup();
+        $allReservations = $this->reservationsRepository->getAllReservations();
+        $reservations = [];
+        foreach ($allReservations as $reservation) {
+            $reservationId = $reservation->getId();
+            $reservationStartingDate = $reservation->getStartingDate();
+            $reservationFinalDate = $reservation->getFinalDate();
 
-        $result = sprintf($file, $allReservations, $generateEditPopup, $generateDeletePopup);
+            $employee = $this->employeesRepository->findById($reservation->getEmployeeId());
+            $employeeFirstName = $employee->getFirstName();
+            $employeeLastName = $employee->getlastName();
 
-        return $result;
+            $rooms = $this->roomsRepository->findById($reservation->getRoomId());
+            $roomNumber = $rooms->getNumber();
+
+            $status = $this->reservationStatusRepository->findById($reservation->getStatusId());
+            $roomStatus = $status->getName();
+
+            $reservationGuest  = $this->reservationGuestsRepository->findByReservationId($reservation->getId());
+            $roomGuest = $this->guestsRepository->findById($reservationGuest->getGuestId());
+            $guestId = $roomGuest->getId();
+            $roomGuestName = $roomGuest->getFirstName() . " " . $roomGuest->getLastName();
+
+            $guestCountry = $this->countriesRepository->findById($roomGuest->getCountryId());
+            $guestCountryName = $guestCountry->getName();
+
+            $guestCity = $this->citiesRepository->findById($roomGuest->getCityId());
+            $guestCityName =  $guestCity->getName();
+
+            $reservations[] = [
+                'id' => $reservationId,
+                'startingDate' => $reservationStartingDate,
+                'finalDate' => $reservationFinalDate,
+                'employeeFirstName' => $employeeFirstName,
+                'employeeLastName' => $employeeLastName,
+                'roomNumber' => $roomNumber,
+                'roomStatus' => $roomStatus,
+                'guestId' => $guestId,
+                'guestName' => $roomGuestName,
+                'guestCountry' => $guestCountryName,
+                'guestCity' => $guestCityName
+            ];
+        }
+        require_once "../Views/ReservationList.php";
     }
 
+    private function showUpdatePage(): void
+    {
+        $reservationId = $_GET['reservationId'];
+        $reservation = $this->reservationsRepository->findById(intval($reservationId));
+        $reservationStartingDate = $reservation->getStartingDate();
+        $reservationFinalDate = $reservation->getFinalDate();
 
-    private function generateEmployeeSelectMenu(int $selectedEmployeeId = null): string
+        $employeeSelectMenu = $this->generateEmployeeSelectMenu($reservation->getEmployeeId());
+        $roomSelectMenu = $this->generateRoomSelectMenu($reservation->getRoomId());
+        $statusSelectMenu = $this->generateStatusSelectMenu($reservation->getStatusId());
+
+        $reservationGuest  = $this->reservationGuestsRepository->findByReservationId($reservation->getId());
+        $roomGuest = $this->guestsRepository->findById($reservationGuest->getGuestId());
+        $guestId = $roomGuest->getId();
+        $guestFirstName = $roomGuest->getFirstName();
+        $guestLastName = $roomGuest->getLastName();
+        $guestEGN = $roomGuest->getEgn();
+        $guestPhone = $roomGuest->getPhoneNumber();
+
+        $countrySelectMenu = $this->selectMenuHelper->generateCountrySelectMenu($roomGuest->getCountryId());
+        $citySelectMenu = $this->selectMenuHelper->generateCitySelectMenu($roomGuest->getCityId(), $roomGuest->getCountryId());
+
+        require_once '../Views/reservation_form.php';
+    }
+
+    private function generateEmployeeSelectMenu(int $selectedEmployeeId = null): ?array
     {
         $employees = $this->employeesRepository->getAllEmployees();
-
-        $selectMenu = '<label for="employees" class="form-label">Employees</label>';
-        $selectMenu .= '<select class="form-select" name="employeeId" id="employees">';
+        $selectMenu = [];
 
         foreach ($employees as $employee) {
-            $optionTemplate = "<option value='%s' %s>%s</option>";
             $employeeId = $employee->getId();
             $employeeName = $employee->getFirstName();
             $selected = ($selectedEmployeeId !== null && $selectedEmployeeId === $employeeId) ? "selected" : "";
-            $option = sprintf($optionTemplate, $employeeId, $selected, $employeeName);
-            $selectMenu .= $option;
-        }
 
-        $selectMenu .= "</select>";
+            $selectMenu[] = [
+                'id' => $employeeId,
+                'name' => $employeeName,
+                'selected' => $selected
+            ];
+        }
 
         return $selectMenu;
     }
 
-    private function generateRoomSelectMenu(int $selectedRoomId = null): string
+    private function generateGuestDate(Guest $guest): ?array
+    {
+        $guestInformation = [];
+
+        $country = $this->countriesRepository->findById($guest->getCountryId());
+        $city = $this->citiesRepository->findById($guest->getCityId());
+
+        if ($guest === null) {
+            throw new Exception('Nqmash mqsto tuk');
+        }
+
+        $guestInformation[] = [
+            'id' => $guest->getId(),
+            'firstName' => $guest->getFirstName(),
+            'lastName' => $guest->getLastName(),
+            'phone' => $guest->getPhoneNumber(),
+            'egn' => $guest->getEgn(),
+            'country' => $country->getName(),
+            'city' => $city->getName()
+        ];
+
+        return  $guestInformation;
+    }
+
+    private function generateReservationForGuest(Guest $guest): ?array
+    {
+        $reservationDate = [];
+        $reservationIds = $this->reservationGuestsRepository->getAllReservationGuestsByGuestId($guest->getId());
+
+        foreach ($reservationIds as $reservationId) {
+            $reservation = $this->reservationsRepository->findById($reservationId->getReservationId());
+            $room = $this->roomsRepository->findById($reservation->getRoomId());
+            $reservationDate[] = [
+                'startingDate' => $reservation->getStartingDate(),
+                'finalDate' => $reservation->getFinalDate(),
+                'number' => $room->getNumber(),
+            ];
+        }
+
+        return $reservationDate;
+    }
+
+    private function generateRoomSelectMenu(int $selectedRoomId = null): ?array
     {
         $rooms = $this->roomsRepository->getAllRooms();
-
-        $selectMenu = '<label for="roooms" class="form-label">Rooms</label>';
-        $selectMenu .= '<select class="form-select" name="roomId" id="rooms">';
+        $selectMenu = [];
 
         foreach ($rooms as $room) {
-            $optionTemplate = "<option value='%s' %s>%s-%s : %s</option>";
             $roomId = $room->getId();
             $roomName = $room->getNumber();
-            $roomType = $this->roomTypesRepository->findById($room->getTypeId());
+            $roomTypes = $this->roomTypesRepository->findById($room->getTypeId());
+            $type = $roomTypes->getName();
+
             $extra = $this->roomExtrasMapRepository->findByRoomId($room->getId());
             $roomExtra = $this->roomExtrasRepository->findById($extra->getExtraId());
+            $extraName = $roomExtra->getName();
+
             $selected = ($selectedRoomId !== null && $selectedRoomId === $roomId) ? "selected" : "";
-            $option = sprintf($optionTemplate, $roomId, $selected, $roomName, $roomType->getName(), $roomExtra->getName());
-            $selectMenu .= $option;
+
+            $selectMenu[] = [
+                'id' => $roomId,
+                'name' => $roomName,
+                'types' => $type,
+                'extra' => $extraName,
+                'selected' => $selected
+            ];
         }
-
-        $selectMenu .= "</select>";
-
         return $selectMenu;
     }
 
-    private function generateStatusSelectMenu(int $selectedStatusId = null): string
+    private function generateStatusSelectMenu(int $selectedStatusId = null): ?array
     {
         $reservationStatus = $this->reservationStatusRepository->getAllStatus();
-
-        $selectMenu = '<label for="status" class="form-label">Status</label>';
-        $selectMenu .= '<select class="form-select" name="statusId" id="status">';
+        $selectMenu = [];
 
         foreach ($reservationStatus as $status) {
-            $optionTemplate = "<option value='%s' %s>%s</option>";
             $statusId = $status->getId();
             $statusName = $status->getName();
             $selected = ($selectedStatusId !== null && $selectedStatusId === $statusId) ? "selected" : "";
-            $option = sprintf($optionTemplate, $statusId, $selected, $statusName);
-            $selectMenu .= $option;
+
+
+            $selectMenu[] = [
+                'id' => $statusId,
+                'name' => $statusName,
+                'selected' => $selected
+            ];
         }
 
-        $selectMenu .= "</select>";
-
-        return $selectMenu;
-    }
-
-    private function generateCitySelectMenu(int $selectedCityId = null, int $selectedCountryId = null)
-    {
-        $countryId = isset($_GET['countryId']) ? intval($_GET['countryId']) : $selectedCountryId;
-        $cities = $this->citiesRepository->getCitiesByCountryId($countryId);
-    
-        $selectMenus = '';
-    
-        foreach ($cities as $city) {
-            $optionTemplate = "<option value='%s'%s>%s</option>";
-            $cityId = $city->getId();
-            $cityName = $city->getName();
-            $selected = ($selectedCityId !== null && $selectedCityId === $cityId) ? " selected" : "";
-            $option = sprintf($optionTemplate, $cityId, $selected, $cityName);
-            $selectMenus .= $option;
-        }
-    
-        if (!isset($_GET['countryId'])) {
-            return $selectMenus;
-        } else {
-            echo $selectMenus;
-            exit();
-        }
-    }
-    
-
-    private function generateCountrySelectMenu(int $selectedCountryId = null): string
-    {
-        $countries = $this->countriesRepository->getAllCountries();
-        $selectMenu = '';
-        
-        if ($selectedCountryId === null) {
-            $placeholderOption = "<option value='' selected>Изберете държава</option>";
-            $selectMenu .= $placeholderOption;
-        }
-    
-        foreach ($countries as $country) {
-            $optionTemplate = "<option value='%s' %s>%s</option>";
-            $countryId = $country->getId();
-            $countryName = $country->getName();
-            $selected = ($selectedCountryId !== null && $selectedCountryId === $countryId) ? "selected" : "";
-            $option = sprintf($optionTemplate, $countryId, $selected, $countryName);
-            $selectMenu .= $option;
-        }
-    
         return $selectMenu;
     }
 
@@ -243,198 +359,39 @@ class ReservationPageController
             throw new Exception("Няма как началната дата да е по голяма от крайната");
         }
 
-        $guest = $this->guestsRepository->create($guestFirstName, $guestLastName, $guestEgn, $guestPhone, intval($guestCountry), intval($guestCity));
+        $foundGuest = $this->guestsRepository->findByEGN($guestEgn);
+
         $reservation = $this->reservationsRepository->create(intval($employeeId), intval($roomId), $startingDate, $finalDate, intval($statusId));
-        $this->reservationGuestsRepository->create($reservation->getId(), $guest->getId());
+
+        if ($foundGuest !== null) {
+            $this->reservationGuestsRepository->create($reservation->getId(), $foundGuest->getId());
+        } else {
+            $guest = $this->guestsRepository->create($guestFirstName, $guestLastName, $guestEgn, $guestPhone, intval($guestCountry), intval($guestCity));
+            $this->reservationGuestsRepository->create($reservation->getId(), $guest->getId());
+        }
+
         header("Location: ../Controllers/ReservationPageController.php?ReservationLists");
     }
 
-    private function generateUpdatePopupForm(): string
+    private function filterHandle(string $reservationStartingDate = '', string $reservationFinalDate = '', int $roomId = null, int $countryId = null): ?array
     {
-        $isEditRequested = isset($_GET['reservationId']);
+        if ($reservationStartingDate == '' && $reservationFinalDate == '' && $roomId == null) {
+            $reservations = $this->reservationsRepository->getAllReservations();
+        } else if ($reservationStartingDate != '' && $reservationFinalDate != '' && $roomId != null) {
+            $reservations = $this->reservationsRepository->getAllReservationByRoomAndPeriod($reservationStartingDate, $reservationFinalDate, $roomId);
+        } else if ($reservationStartingDate == '' && $reservationFinalDate == '' && $countryId != null) {
+            $guests = $this->guestsRepository->findByCountryId($countryId);
 
-        if (!$isEditRequested) {
-            return '';
-        }
+            foreach ($guests as $guest) {
+                $reservationsByCountry = $this->reservationGuestsRepository->findByGuestId($guest->getId());
 
-        $reservationId = intval($_GET['reservationId']);
-        $reservation = $this->reservationsRepository->findById($reservationId);
-        $guestId = intval($_GET['guestId']);
-        $guest = $this->guestsRepository->findById(($guestId));
-
-        $form = "<div id='overlay'></div>";
-        $form .= "<div id='form-container'>";
-        $form .= "<form method='POST' action='../Controllers/ReservationPageController.php?ReservationLists'>";
-        $form .= "<input type='hidden' name='reservationId' value='" . $reservationId . "'>";
-        $form .= "<input type='hidden' name='guestId' value = '" . $guestId . "'>";
-        $form .= $this->generateEmployeeSelectMenu($reservation->getEmployeeId());
-        $form .= $this->generateRoomSelectMenu($reservation->getRoomId());
-        $form .= $this->generateStatusSelectMenu($reservation->getStatusId());
-        $form .= '<label for="startingDateEdit" class="form-label">Starting Date</label>';
-        $form .= "<input type='date' class='form-control' name='startingDate' id='startingDateEdit' value=" . $reservation->getStartingDate() . ">";
-        $form .= '<label for="finalDateEdit" class="form-label">Final Date</label>';
-        $form .= "<input type='date' class='form-control' name='finalDate' id='finalDateEdit' value=" . $reservation->getFinalDate() . ">";
-        $form .= '<fieldset id="guestContainer">';
-        $form .= '<legend>Danni za Guest</legend>';
-        $form .= '<div class="guest-fields mb-3">';
-        $form .= '<label for="firstNameEdit" class="form-label ">First Name</label>';
-        $form .= '<input type="text" class="form-control" name="firstName" id="firstNameEdit" value=' . $guest->getFirstName() . '>';
-        $form .= '</div>';
-        $form .= '<div class="guest-fields mb-3">';
-        $form .= '<label for="lastNameEdit" class="form-label ">Last Name of Guest</label>';
-        $form .= '<input type="text" class="form-control" name="lastName" id="lastNameEdit" value=' . $guest->getLastName() . '>';
-        $form .= '</div>';
-        $form .= '<div class="guest-fields mb-3">';
-        $form .=   '<label for="egnEdit" class="form-label ">Egn of Guest</label>';
-        $form .= '<input type="text" class="form-control" name="egn" id="egnEdit" value=' . $guest->getEgn() . '>';
-        $form .= '</div>';
-        $form .= '<div class="guest-fields mb-3">';
-        $form .=  '<label for="phoneNumberEdit" class="form-label ">Phone of Guest</label>';
-        $form .= '<input type="text" class="form-control" name="phoneNumber" id="phoneNumberEdit" value=' . $guest->getPhoneNumber() . '>';
-        $form .=  '</div>';
-        $form .= '<div class="mb-3">';
-        $form .= '<label for="countries" class="form-label">Contries</label>';
-        $form .= '<select  class = "form-select" id="countries" name="Country" onchange="fetchCitiesByCountry()" >';
-        $form .= $this->generateCountrySelectMenu($guest->getCountryId());
-        $form .= '</select>';
-        $form .= '</div>';
-        $form .= '<div class="mb-3">';
-        $form .= '<label for="cities" class="form-label">Cities</label>';
-        $form .= '<select class="form-select" id="cities" name="City">';
-        $form .=  $this->generateCitySelectMenu($guest->getCityId(), $guest->getCountryId());
-        $form .= '</select>';
-        $form .= '</div>';
-        $form .= '</fieldset>';
-        $form .= '<button class="btn btn-primary" type="submit" name="update">Update</button>';
-        $form .= '<button class="btn btn-secondary" type="submit" name="cancel">Cancel</button>';
-        $form .= "</form>";
-        $form .= "</div>";
-        $form .= "</div>";
-
-        $form .= "<script>";
-        $form .= "document.getElementById('overlay').style.display = 'block';";
-        $form .= "document.getElementById('form-container').style.display = 'block';";
-        $form .=  "document.getElementById('submitBTN').value = 'Edit Phone';";
-        $form .=  "document.getElementById('newNumber').style.display = 'block';";
-        $form .= ' function fetchCitiesByCountry() { ';
-        $form .= 'const countryId = document.getElementById("countries").value; ';
-        $form .= ' fetch(`../Controllers/ReservationPageController.php?Reservation&countryId=${countryId}`)';
-
-        $form .= ' .then(response => response.text()) ';
-        $form .= ' .then(result => { ';
-        $form .= 'document.getElementById("cities").innerHTML = result;
-                    console.log(document.getElementById("cities").innerHTML = result);
-                })
-                .catch(error => console.error(error)); 
-        }';
-            $form .= "</script>";
-        return $form;
-    }
-
-    private function generateDeletePopup(): string
-    {
-        $isEditRequested = isset($_GET['deleteId']);
-
-        if (!$isEditRequested) {
-            return '';
-        }
-
-        $reservationId = intval($_GET['deleteId']);
-        $reservation = $this->reservationsRepository->findById($reservationId);
-
-        $form = "<div id='overlay'></div>";
-        $form .= "<div id = 'form-container'>";
-        $form .= "<form method='POST' action='../Controllers/ReservationPageController.php?ReservationLists'>";
-        $form .= "<input type='hidden' name='reservationId' value='" . $reservation->getId() . "'>";
-        $form .= '<p class="text-center">Are you sure to delete this reservation?</p>';
-        $form .= "<input type='submit' name='delete' value='delete'>";
-        $form .= "<input type='submit' name='cancel' value='cancel'>";
-        $form .= "</form>";
-        $form .= "</div>";
-
-        $form .= "<script>";
-        $form .= "document.getElementById('overlay').style.display = 'block';";
-        $form .= "document.getElementById('form-container').style.display = 'block';";
-        $form .=  "document.getElementById('submitBTN').value = 'Edit Phone';";
-        $form .=  "document.getElementById('newNumber').style.display = 'block';";
-        $form .= "</script>";
-
-        return $form;
-    }
-
-    private function showAllReservations(): string
-    {
-        $reservations = $this->reservationsRepository->getAllReservations();
-        $result = '';
-
-        $result .= '<div class="container mt-3">';
-        $result .= '<table class ="table table-primary table-striped">';
-        $result .= '<thead>';
-        $result .= '<tr>';
-        $result .= '<th>Employee FirstName</th>';
-        $result .= '<th>Employee LastNamer</th>';
-        $result .= '<th>Number Of room</th>';
-        $result .= '<th>Starting Date</th>';
-        $result .= '<th>Final Date</th>';
-        $result .= '<th>Reservation status</th>';
-        $result .= '<th>Guest Names</th>';
-        $result .= '<th>Country</th>';
-        $result .= '<th>City</th>';
-        $result .= '<th>Actions</th>';
-
-        $result .= '</tr></thead>';
-
-        foreach ($reservations as $reservation) {
-            $result .= '<tbody>';
-            $result .= '<tr>';
-            $employee = $this->employeesRepository->findById($reservation->getEmployeeId());
-
-            if ($employee != null) {
-                $result .= "<td>" . $employee->getFirstName() . "</td>";
-                $result .= "<td>" . $employee->getLastName() . "</td>";
-            } else {
-                $result .= "<td>Employee not exist</td>";
-                $result .= "<td>Employee not exist</td>";
+                $reservations = $this->reservationsRepository->getAllReservationById($reservationsByCountry->getReservationId());
             }
-
-            $rooms = $this->roomsRepository->findById($reservation->getRoomId());
-
-            if ($rooms != null) {
-                $result .= "<td>" . $rooms->getNumber() . "</td>";
-            } else {
-                $result .= "<td>Room not exist</td>";
-            }
-
-            $result .= "<td>" . $reservation->getStartingDate() . "</td>";
-            $result .= "<td>" . $reservation->getFinalDate() . "</td>";
-            $status = $this->reservationStatusRepository->findById($reservation->getStatusId());
-            $result .= "<td>" . $status->getName() . "</td>";
-            $reservationGuest  = $this->reservationGuestsRepository->findByReservationId($reservation->getId());
-            $guest = $this->guestsRepository->findById($reservationGuest->getGuestId());
-            $result .= "<td>" . $guest->getFirstName() . " " . $guest->getLastName() . "</td>";
-            $country = $this->countriesRepository->findById($guest->getCountryId());
-            $result .= "<td>" . $country->getName() . "</td>";
-
-            $city = $this->citiesRepository->findById($guest->getCityId());
-            $result .= "<td>" . $city->getName() . "</td>";
-            $result .= '<td><div class="dropdown"><button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"></button>';
-            $result .= '<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">';
-
-            $editReservation  = $this->reservationsRepository->findById($reservationGuest->getReservationId());
-            $editGuest = $this->guestsRepository->findById($reservationGuest->getGuestId());
-
-            $result .= "<li><a class='dropdown-item' href='../Controllers/ReservationPageController.php?ReservationLists&deleteId=" . $reservation->getId() . "'>Delete</a></li>";
-            $result .= "<li><a class='dropdown-item' href='../Controllers/ReservationPageController.php?ReservationLists&reservationId=" . $editReservation->getId() . "&guestId=" . $editGuest->getId() . "'>Edit</a></li>";
-            $result .= '</ul></div></td>';
-
-            $result .= "</tr>";
-            $result .= "</tbody>";
+        } else {
+            $reservations = $this->reservationsRepository->getAllReservationByRoom($roomId);
         }
 
-        $result .= "</table>";
-        $result .= "</div>";
-
-        return $result;
+        return $reservations;
     }
 
     private function update()
@@ -451,7 +408,6 @@ class ReservationPageController
             header("Location: ../Controllers/ReservationPageController.php?ReservationLists");
             exit();
         }
-
         $reservationId = $_POST['reservationId'];
         $employeeId = htmlspecialchars($_POST['employeeId']);
         $roomId = htmlspecialchars($_POST['roomId']);
@@ -466,7 +422,6 @@ class ReservationPageController
         $guestPhone = htmlspecialchars($_POST['phoneNumber']);
         $guestCity = htmlspecialchars($_POST['City']);
         $guestCountry = htmlspecialchars($_POST['Country']);
-
 
         $this->reservationsRepository->update(intval($reservationId), intval($employeeId), intval($roomId), $startingDate, $finalDate, intval($statusId));
         $this->guestsRepository->update(intval($guestId), $guestFirstName, $guestLastName, $guestEgn, $guestPhone, intval($guestCountry), intval($guestCity));
@@ -489,10 +444,19 @@ class ReservationPageController
             exit();
         }
 
-        $reservationId = intval($_POST['reservationId']);
-        $reservationMapId = $this->reservationGuestsRepository->findByReservationId($reservationId);
-        $this->reservationGuestsRepository->delete($reservationMapId->getId());
-        $this->reservationsRepository->delete($reservationId);
+        $idForDelete = intval($_GET['deleteId']);
+        $reservationById = $this->reservationGuestsRepository->findByReservationId($idForDelete);
+        $foundedGuest = $reservationById->getGuestId();
+        $reservationMapIds = $this->reservationGuestsRepository->getAllReservationGuestsByGuestId($foundedGuest);
+
+        foreach ($reservationMapIds as $reservationMapId) {
+            $guestId = $reservationMapId->getGuestId();
+            $reservationId = $reservationMapId->getReservationId();
+            $this->reservationGuestsRepository->deleteByGuestId($reservationMapId->getGuestId());
+            $this->guestsRepository->delete($guestId);
+            $this->paymentsRepository->delete($reservationId);
+            $this->reservationsRepository->delete($reservationId);
+        }
 
         header("Location: ../Controllers/ReservationPageController.php?ReservationLists");
     }
