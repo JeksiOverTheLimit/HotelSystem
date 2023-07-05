@@ -8,16 +8,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../assets/js/CallCitySelectMenu.js"></script>
-    <script src="../../assets/js/nav.js"></script>
 </head>
 
 <body>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id="navigation-placeholder">
+    <?php include_once "Navigations.php"; ?>
     </nav>
 
     <main>
         <h1 class="text-center">All reservation!</h1>
-        <form method="POST" action="ReservationPageController.php?ReservationLists">
+        <form method="POST" action="ReservationController.php?ReservationLists">
 
             <div class="mb-3">
                 <label for="startingDate">StartingDate</label>
@@ -69,14 +69,14 @@
                             <td><?php echo $reservation['startingDate']; ?></td>
                             <td><?php echo $reservation['finalDate']; ?></td>
                             <td><?php echo $reservation['roomStatus']; ?></td>
-                            <td><a href="../Controllers/ReservationPageController.php?guestPrivatePageId=<?php echo $reservation['guestId']?>"><?php echo $reservation['guestName']; ?></a></td>
+                            <td><a href="../Controllers/ReservationController.php?guestPrivatePageId=<?php echo $reservation['guestId']?>"><?php echo $reservation['guestName']; ?></a></td>
                             <td><?php echo $reservation['guestCountry']; ?></td>
                             <td><?php echo $reservation['guestCity'];?></td>
                             <td>
                                 <div class="dropdown"><button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"></button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     <li><a class='dropdown-item' href="#" onclick="showDeletePopup(<?php echo $reservation['id']; ?>)">Delete</a></li>
-                                        <li><a class='dropdown-item' href='../Controllers/ReservationPageController.php?Edit&reservationId=<?php echo $reservation['id'];?>&guestId=<?php echo $reservation['guestId'];?>'>Edit</a></li>
+                                        <li><a class='dropdown-item' href='../Controllers/ReservationController.php?Edit&reservationId=<?php echo $reservation['id'];?>&guestId=<?php echo $reservation['guestId'];?>'>Edit</a></li>
                                     </ul>
                                 </div>
                             </td>
@@ -107,7 +107,7 @@
         formContainer.style.display = 'block';
 
         var deleteForm = document.getElementById('delete-form');
-        deleteForm.action = "../Controllers/ReservationPageController.php?deleteId=" + reservationId;
+        deleteForm.action = "../Controllers/ReservationController.php?deleteId=" + reservationId;
     }
 
     function hideDeletePopup() {

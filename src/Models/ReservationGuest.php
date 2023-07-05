@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-class ReservationGuest extends BaseId
+class ReservationGuest extends BaseModel
 {
     private int $reservationId;
     private int $guestId;

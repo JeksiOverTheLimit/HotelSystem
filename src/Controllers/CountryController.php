@@ -18,27 +18,27 @@ include_once "../Models/Employee.php";
 include_once "../Database/Repositories/PaymentRepository.php";
 include_once "../Models/Payment.php";
 
-$callController = new CountryPageController();
+$callController = new CountryController();
 
-class CountryPageController
+class CountryController
 {
-    private CountryRepository $countriesRepository;
-    private CityRepository $citiesRepository;
-    private GuestRepository $guestsRepository;
+    private CountryRepository $countryRepository;
+    private CityRepository $cityRepository;
+    private GuestRepository $guestRepository;
     private ReservationRepository $reservationRepository;
-    private ReservationGuestRepository $reservationGuestsRepository;
-    private EmployeeRepository $employeesRepository;
-    private PaymentRepository $paymentsRepository;
+    private ReservationGuestRepository $reservationGuestRepository;
+    private EmployeeRepository $employeeRepository;
+    private PaymentRepository $paymentRepository;
 
     public function __construct()
     {
-        $this->countriesRepository = new CountryRepository();
-        $this->citiesRepository = new CityRepository();
-        $this->guestsRepository = new GuestRepository();
+        $this->countryRepository = new CountryRepository();
+        $this->cityRepository = new CityRepository();
+        $this->guestRepository = new GuestRepository();
         $this->reservationRepository = new ReservationRepository();
-        $this->reservationGuestsRepository = new ReservationGuestRepository();
-        $this->employeesRepository = new EmployeeRepository();
-        $this->paymentsRepository = new PaymentRepository();
+        $this->reservationGuestRepository = new ReservationGuestRepository();
+        $this->employeeRepository = new EmployeeRepository();
+        $this->paymentRepository = new PaymentRepository();
 
         switch (true) {
             case isset($_POST['submit']):
@@ -68,7 +68,7 @@ class CountryPageController
 
     private function showUpdatePage(){
         $countryId = $_GET['editId'];
-        $country = $this->countriesRepository->findById(intval($countryId));
+        $country = $this->countryRepository->findById(intval($countryId));
         require_once '../Views/country_form.php';
     }
 
@@ -82,14 +82,14 @@ class CountryPageController
 
         $name = htmlspecialchars($_POST['name']);
 
-        $this->countriesRepository->create($name);
+        $this->countryRepository->create($name);
 
-        header("Location: CountryPageController.php?CountryList");
+        header("Location: CountryController.php?CountryList");
     }
 
     private function showAllCountries(): void
     {
-        $countries = $this->countriesRepository->getAllCountries();
+        $countries = $this->countryRepository->getAllCountries();
         require_once '../Views/CountryList.php';
                        
     }
@@ -106,16 +106,16 @@ class CountryPageController
         $isCancelEditIncome = isset($_POST['cancel']);
 
         if ($isCancelEditIncome) {
-            header("Location: CountryPageController.php?CountryList");
+            header("Location: CountryController.php?CountryList");
             exit();
         }
 
         $countryId = intval($_POST['countryId']);
         $name = htmlspecialchars($_POST['name']);
 
-        $this->countriesRepository->update($countryId, $name);
+        $this->countryRepository->update($countryId, $name);
 
-        header("Location: CountryPageController.php?CountryList");
+        header("Location: CountryController.php?CountryList");
     }
 
     private function delete(): string
@@ -129,34 +129,34 @@ class CountryPageController
         $isCancelEditIncome = isset($_POST['cancel']);
 
         if ($isCancelEditIncome) {
-            header("Location: CountryPageController.php?CountryList");
+            header("Location: CountryController.php?CountryList");
             exit();
         }
 
         $countryId = intval($_GET['deleteId']);
        
-        $guests = $this->guestsRepository->findByCountryId($countryId);
-        $employees = $this->employeesRepository->findByCountryId($countryId);
-        $cities = $this->citiesRepository->findByCountryId($countryId);
+        $guests = $this->guestRepository->findByCountryId($countryId);
+        $employees = $this->employeeRepository->findByCountryId($countryId);
+        $cities = $this->cityRepository->findByCountryId($countryId);
 
         foreach ($guests as $guest) {
             $guestId = $guest->getId();
-            $reservationsGuests = $this->reservationGuestsRepository->findByGuestId($guestId);
-            $this->reservationGuestsRepository->deleteByGuestId($guestId);
-            $this->guestsRepository->delete($guestId);
-            $this->paymentsRepository->delete($reservationsGuests->getReservationId());
+            $reservationsGuests = $this->reservationGuestRepository->findByGuestId($guestId);
+            $this->reservationGuestRepository->deleteByGuestId($guestId);
+            $this->guestRepository->delete($guestId);
+            $this->paymentRepository->delete($reservationsGuests->getReservationId());
             $this->reservationRepository->delete($reservationsGuests->getReservationId());
 
             foreach ($employees as $employee) {
-                $this->employeesRepository->delete($employee->getId());
+                $this->employeeRepository->delete($employee->getId());
             }
 
             foreach ($cities as $city) {
-                $this->citiesRepository->delete($city->getId());
+                $this->cityRepository->delete($city->getId());
             }
         }
-        $this->countriesRepository->delete($countryId);
+        $this->countryRepository->delete($countryId);
 
-        header("Location: CountryPageController.php?CountryList");
+        header("Location: CountryController.php?CountryList");
     }
 }

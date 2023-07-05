@@ -8,15 +8,15 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../assets/js/CallCitySelectMenu.js"></script>
-    <script src="../../assets/js/nav.js"></script>
 </head>
 
 <body>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id="navigation-placeholder">
+    <?php include_once "Navigations.php"; ?>
     </nav>
     <h1 class="text-center">You want to register a employee?</h1>
     <div class="container">
-        <form action ="../Controllers/EmployeePageController.php" method="post">
+        <form action ="../Controllers/EmployeeController.php" method="post">
             <div class="mb-3">
                 <label for="firstName" class="form-label">First Name</label>
                 <input type="hidden" name="employeeId" value="<?php echo isset($_GET['editId']) ? $employee->getId() : '' ?>">

@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../assets/js/nav.js"></script>
 </head>
 
 <body>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id="navigation-placeholder">
+    <?php include_once "Navigations.php"; ?>
     </nav>
     <div class="container">
         <div class="container mt-3">

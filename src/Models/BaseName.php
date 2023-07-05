@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-include_once "BaseId.php";
+include_once "BaseModel.php";
 
-class BaseName extends BaseId
+class BaseName extends BaseModel
 {
     protected string $name;
 

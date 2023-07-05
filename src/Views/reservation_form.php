@@ -8,18 +8,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../assets/js/ReservationSelectMenu.js"></script>
-    <script src="../../assets/js/nav.js"></script>
 </head>
 
 <body>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id = "navigation-placeholder">
+    <?php include_once "Navigations.php"; ?>
     </nav>
 
     <main>
         <h1 class="text-center">You want to make a reservation?</h1>
 
         <div class="container">
-            <form action="../Controllers/ReservationPageController.php" method="post" id="reservationForm">
+            <form action="../Controllers/ReservationController.php" method="post" id="reservationForm">
                 <div class="mb-3">
                 <input type="hidden" name="reservationId" value="<?php echo isset($_GET['reservationId']) ? $_GET['reservationId'] : ''; ?>">
                 <label for="employees" class="form-label">Employees</label>

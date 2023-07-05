@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-include_once "BaseId.php";
+include_once "BaseModel.php";
 
-class Reservation extends BaseId
+class Reservation extends BaseModel
 {
     private int $employeeId;
     private int $roomId;

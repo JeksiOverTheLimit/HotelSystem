@@ -7,16 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../assets/js/nav.js"></script>
 </head>
 
 <body>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id = "navigation-placeholder">
+    <?php include_once "Navigations.php"; ?>
     </nav>
     <h1 class="text-center">You want to Make a payment?</h1>
     <br>
     <div class="container">
-        <form action ='../Controllers/PaymentPageController.php' method="post">
+        <form action ='../Controllers/PaymentController.php' method="post">
         <div class="mb-3">
                 <input type="hidden" name='id' value="<?php echo isset($_GET['editId']) ? $_GET['editId'] : ''; ?>">
                 <label for="reservation" class="form-label">Choose Reservation</label>

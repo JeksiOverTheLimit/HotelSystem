@@ -9,19 +9,19 @@ include_once "../Database/Repositories/CurrencyRepository.php";
 include_once "../Database/Repositories/PaymentRepository.php";
 include_once "../Models/Payment.php";
 
-$callController = new CurrencyPageController();
+$callController = new CurrencyController();
 
-class CurrencyPageController
+class CurrencyController
 {
     private const VIEW_PATH = "../Views/currencies.html";
     private const VIEW_LIST_PATH = "../Views/CurrencyList.html";
-    private CurrencyRepository $currenciesRepository;
-    private PaymentRepository $paymentsRepository;
+    private CurrencyRepository $currencyRepository;
+    private PaymentRepository $paymentRepository;
 
     public function __construct()
     {
-        $this->currenciesRepository = new CurrencyRepository();
-        $this->paymentsRepository = new PaymentRepository();
+        $this->currencyRepository = new CurrencyRepository();
+        $this->paymentRepository = new PaymentRepository();
 
         switch (true) {
             case isset($_POST['submit']):
@@ -53,7 +53,7 @@ class CurrencyPageController
     private function showUpdatePage()
     {
         $currencyId = $_GET['editId'];
-        $currency = $this->currenciesRepository->findById(intval($currencyId));
+        $currency = $this->currencyRepository->findById(intval($currencyId));
         require_once "../Views/currency_form.php";
     }
 
@@ -67,15 +67,15 @@ class CurrencyPageController
 
         $name = htmlspecialchars($_POST['name']);
 
-        $this->currenciesRepository->create($name);
+        $this->currencyRepository->create($name);
 
-        header("Location: ../Controllers/CurrencyPageController.php?CurrencyList");
+        header("Location: ../Controllers/CurrencyController.php?CurrencyList");
     }
 
 
     private function showAllCurrencies(): void
     {
-        $currencies = $this->currenciesRepository->getAllCurrencies();
+        $currencies = $this->currencyRepository->getAllCurrencies();
         require_once '../Views/CurrencyList.php';
     }
 
@@ -90,16 +90,16 @@ class CurrencyPageController
         $isCancelEditIncome = isset($_POST['cancel']);
 
         if ($isCancelEditIncome) {
-            header("Location: ../Controllers/CurrencyPageController.php?CurrencyList");
+            header("Location: ../Controllers/CurrencyController.php?CurrencyList");
             exit();
         }
 
         $currencyId = intval($_POST['currencyId']);
         $name = htmlspecialchars($_POST['name']);
 
-        $this->currenciesRepository->update($currencyId, $name);
+        $this->currencyRepository->update($currencyId, $name);
 
-        header("Location: ../Controllers/CurrencyPageController.php?CurrencyList");
+        header("Location: ../Controllers/CurrencyController.php?CurrencyList");
     }
 
     private function delete(): string
@@ -113,19 +113,19 @@ class CurrencyPageController
         $isCancelEditIncome = isset($_POST['cancel']);
 
         if ($isCancelEditIncome) {
-            header("Location: ../Controllers/CurrencyPageController.php?CurrencyList");
+            header("Location: ../Controllers/CurrencyController.php?CurrencyList");
             exit();
         }
 
         $currencyId = intval($_POST['currencyId']);
-        $payments = $this->paymentsRepository->findByCurrencyId($currencyId);
+        $payments = $this->paymentRepository->findByCurrencyId($currencyId);
 
         foreach ($payments as $payment) {
             $paymentId = $payment->getReservationId();
-            $this->paymentsRepository->delete($paymentId);
+            $this->paymentRepository->delete($paymentId);
         }
-        $this->currenciesRepository->delete($currencyId);
+        $this->currencyRepository->delete($currencyId);
 
-        header("Location: ../Controllers/CurrencyPageController.php?CurrencyList");
+        header("Location: ../Controllers/CurrencyController.php?CurrencyList");
     }
 }

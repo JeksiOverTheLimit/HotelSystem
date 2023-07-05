@@ -18,27 +18,27 @@ include_once "../Models/Reservation.php";
 include_once "../Database/Repositories/ReservationGuestRepository.php";
 include_once "../Models/ReservationGuest.php";
 
-$callController = new RoomPageController();
+$callController = new RoomController();
 
-class RoomPageController
+class RoomController
 {
     private const VIEW_PATH = "../Views/rooms.html";
     private const VIEW_LIST_PATH = "../Views/RoomList.html";
-    private RoomRepository $roomsRepository;
-    private RoomTypeRepository $roomTypesRepository;
-    private RoomExtraRepository $roomExtrasRepository;
-    private RoomExtraMapRepository $roomExtrasMapRepository;
+    private RoomRepository $roomRepository;
+    private RoomTypeRepository $roomTypeRepository;
+    private RoomExtraRepository $roomExtraRepository;
+    private RoomExtraMapRepository $roomExtraMapRepository;
     private ReservationRepository $reservationRepository;
-    private ReservationGuestRepository  $reservationGuestsRepository;
+    private ReservationGuestRepository  $reservationGuestRepository;
 
     public function __construct()
     {
-        $this->roomsRepository = new RoomRepository();
-        $this->roomTypesRepository = new RoomTypeRepository();
-        $this->roomExtrasRepository = new RoomExtraRepository();
-        $this->roomExtrasMapRepository = new RoomExtraMapRepository();
+        $this->roomRepository = new RoomRepository();
+        $this->roomTypeRepository = new RoomTypeRepository();
+        $this->roomExtraRepository = new RoomExtraRepository();
+        $this->roomExtraMapRepository = new RoomExtraMapRepository();
         $this->reservationRepository = new ReservationRepository();
-        $this->reservationGuestsRepository = new ReservationGuestRepository();
+        $this->reservationGuestRepository = new ReservationGuestRepository();
 
         switch (true) {
             case isset($_POST['submit']):
@@ -65,11 +65,11 @@ class RoomPageController
     private function showUpdatePage()
     {
         $roomId = $_GET['editId'];
-        $room = $this->roomsRepository->findById(intval($roomId));
+        $room = $this->roomRepository->findById(intval($roomId));
 
-        $allTypes = $this->roomTypesRepository->getAllTypes();
+        $allTypes = $this->roomTypeRepository->getAllTypes();
 
-        $allExtrasForRoom = $this->roomExtrasMapRepository->getAllExtrasForRoom(intval($roomId));
+        $allExtrasForRoom = $this->roomExtraMapRepository->getAllExtrasForRoom(intval($roomId));
 
         $typeOptions = $this->generateTypesSelectMenu($room->getTypeId());
 
@@ -96,24 +96,24 @@ class RoomPageController
         $typeId = isset($_POST['typeId']) ? intval($_POST['typeId']) : null;
         $typeOptions = $this->generateTypesSelectMenu();
         if ($typeId == null) {
-            $rooms = $this->roomsRepository->getAllRooms();
+            $rooms = $this->roomRepository->getAllRooms();
         } else {
-            $rooms = $this->roomsRepository->filterRoomByTypeId($typeId);
+            $rooms = $this->roomRepository->filterRoomByTypeId($typeId);
         }
 
         $roomOptions = [];
         foreach ($rooms as $room) {
             $roomId = $room->getId();
             $roomNumber = $room->getNumber();
-            $type = $this->roomTypesRepository->findById($room->getTypeId());
+            $type = $this->roomTypeRepository->findById($room->getTypeId());
             $roomType = $type->getName();
             $roomPrice = $room->getPrice();
-            $extraIdFromMapRepository = $this->roomExtrasMapRepository->getAllExtrasForRoom($room->getId());
+            $extraIdFromMapRepository = $this->roomExtraMapRepository->getAllExtrasForRoom($room->getId());
             $extras = [];
 
             foreach ($extraIdFromMapRepository as $extraIds) {
                 foreach ($extraIds as $extraId) {
-                    $extras[] = $this->roomExtrasRepository->findById($extraId)->getName();
+                    $extras[] = $this->roomExtraRepository->findById($extraId)->getName();
                 }
             }
 
@@ -130,7 +130,7 @@ class RoomPageController
 
     private function generateTypesSelectMenu(int $selectedTypesId = null): ?array
     {
-        $types = $this->roomTypesRepository->getAllTypes();
+        $types = $this->roomTypeRepository->getAllTypes();
         $selectMenu = [];
         foreach ($types as $type) {
             $typeId = $type->getId();
@@ -149,7 +149,7 @@ class RoomPageController
 
     private function generateExtraCheckboxes(array $selectedExtraIds = []): ?array
     {
-        $extras = $this->roomExtrasRepository->getAllExtras();
+        $extras = $this->roomExtraRepository->getAllExtras();
         $checkboxes = [];
 
         foreach ($extras as $extra) {
@@ -174,14 +174,14 @@ class RoomPageController
         $price = htmlspecialchars($_POST['price']);
         $extras = isset($_POST['extraIds']) ? $_POST['extraIds'] : [];
 
-        $room = $this->roomsRepository->create(intval($number), intval($typeId), floatval($price));
+        $room = $this->roomRepository->create(intval($number), intval($typeId), floatval($price));
 
         foreach ($extras as $extraId) {
-            $extra = $this->roomExtrasRepository->findById(intval($extraId));
-            $this->roomExtrasMapRepository->create($room->getId(), $extra->getId());
+            $extra = $this->roomExtraRepository->findById(intval($extraId));
+            $this->roomExtraMapRepository->create($room->getId(), $extra->getId());
         }
 
-        header("Location: ../Controllers/RoomPageController.php?RoomLists");
+        header("Location: ../Controllers/RoomController.php?RoomLists");
     }
 
     private function update(): void
@@ -189,7 +189,7 @@ class RoomPageController
         $isCancelEditIncome = isset($_POST['cancel']);
 
         if ($isCancelEditIncome) {
-            header("Location: ../Controllers/RoomPageController.php?RoomLists");
+            header("Location: ../Controllers/RoomController.php?RoomLists");
             exit();
         }
 
@@ -200,7 +200,7 @@ class RoomPageController
         $extras = isset($_POST['extraIds']) ? $_POST['extraIds'] : [];
 
 
-        $currentExtras = $this->roomExtrasMapRepository->getAllExtrasForRoom($roomId);
+        $currentExtras = $this->roomExtraMapRepository->getAllExtrasForRoom($roomId);
 
         foreach ($currentExtras as $currentExtra) {
             $found = false;
@@ -212,23 +212,23 @@ class RoomPageController
             }
 
             if (!$found) {
-                $this->roomExtrasMapRepository->deleteByRoomId($roomId);
+                $this->roomExtraMapRepository->deleteByRoomId($roomId);
                 break;
             }
         }
 
         foreach ($extras as $extra) {
-            $existingExtra = $this->roomExtrasMapRepository->findByRoomId($roomId);
+            $existingExtra = $this->roomExtraMapRepository->findByRoomId($roomId);
             if ($existingExtra && $existingExtra->getExtraId() == intval($extra)) {
                 continue;
             }
 
-            $this->roomExtrasMapRepository->create($roomId, intval($extra));
+            $this->roomExtraMapRepository->create($roomId, intval($extra));
         }
 
-        $this->roomsRepository->update($roomId, intval($number), intval($typeId), floatval($price));
+        $this->roomRepository->update($roomId, intval($number), intval($typeId), floatval($price));
 
-        header("Location: ../Controllers/RoomPageController.php?RoomLists");
+        header("Location: ../Controllers/RoomController.php?RoomLists");
     }
 
     private function delete(): void
@@ -236,24 +236,24 @@ class RoomPageController
         $isCancelEditIncome = isset($_POST['Cancel']);
 
         if ($isCancelEditIncome) {
-            header("Location: ../Controllers/RoomPageController.php?RoomLists");
+            header("Location: ../Controllers/RoomController.php?RoomLists");
             exit();
         }
 
         $roomId = intval($_GET['deleteId']);
-        $roomMapId = $this->roomExtrasMapRepository->findByRoomId($roomId);
+        $roomMapId = $this->roomExtraMapRepository->findByRoomId($roomId);
 
         $reservations = $this->reservationRepository->findByRoomId($roomId);
         foreach ($reservations as $reservation) {
             $reservationId = $reservation->getId();
-            $this->reservationGuestsRepository->deleteByReservationId($reservationId);
+            $this->reservationGuestRepository->deleteByReservationId($reservationId);
         }
 
         $this->reservationRepository->deleteByRoomId($roomId);
 
-        $this->roomExtrasMapRepository->deleteByRoomId($roomId);
-        $this->roomsRepository->delete($roomId);
+        $this->roomExtraMapRepository->deleteByRoomId($roomId);
+        $this->roomRepository->delete($roomId);
 
-        header("Location: ../Controllers/RoomPageController.php?RoomLists");
+        header("Location: ../Controllers/RoomController.php?RoomLists");
     }
 }

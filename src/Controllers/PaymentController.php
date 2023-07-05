@@ -10,21 +10,21 @@ include_once "../Database/Repositories/CurrencyRepository.php";
 include_once "../Models/Reservation.php";
 include_once "../Database/Repositories/ReservationRepository.php";
 
-$payment = new PaymentPageController();
+$payment = new PaymentController();
 
-class PaymentPageController
+class PaymentController
 {
     private const VIEW_PATH = "../Views/Payment.html";
     private const VIEW_LIST_PATH = "../Views/PaymentLists.html";
-    private PaymentRepository $paymentsRepository;
-    private CurrencyRepository $currenciesRepository;
-    private ReservationRepository $reservationsRepository;
+    private PaymentRepository $paymentRepository;
+    private CurrencyRepository $currencyRepository;
+    private ReservationRepository $reservationRepository;
 
     public function __construct()
     {
-        $this->paymentsRepository = new PaymentRepository();
-        $this->currenciesRepository = new CurrencyRepository();
-        $this->reservationsRepository = new ReservationRepository();
+        $this->paymentRepository = new PaymentRepository();
+        $this->currencyRepository = new CurrencyRepository();
+        $this->reservationRepository = new ReservationRepository();
 
         switch (true) {
             case isset($_POST['submit']):
@@ -42,11 +42,10 @@ class PaymentPageController
             case isset($_GET['PaymentLists']):
                 echo $this->showPaymentLists();
                 break;
-                case isset($_GET['Edit']):
-                    echo $this->showUpdatePage();
-                    break;
+            case isset($_GET['Edit']):
+                echo $this->showUpdatePage();
+                break;
         }
-        
     }
 
     private function showPaymentPage()
@@ -56,9 +55,10 @@ class PaymentPageController
         require_once '../Views/Payment.php';
     }
 
-    private function showUpdatePage(){
+    private function showUpdatePage()
+    {
         $paymentId = $_GET['editId'];
-        $payment = $this->paymentsRepository->findById(intval($paymentId));
+        $payment = $this->paymentRepository->findById(intval($paymentId));
         $reservationOptions = $this->generateReservationsSelectMenu($payment->getReservationId());
         $currencyOptions = $this->generateCurrecySelectMenu($payment->getCurrencyId());
         require_once '../Views/payment_form.php';
@@ -66,12 +66,12 @@ class PaymentPageController
 
     private function showPaymentLists()
     {
-        $payments = $this->paymentsRepository->getAllPayments();
+        $payments = $this->paymentRepository->getAllPayments();
         $paymentss = [];
-        foreach($payments as $payment){
+        foreach ($payments as $payment) {
             $paymentId = $payment->getReservationId();
             $paymentPrice = $payment->getPrice();
-            $currencyForPayment = $this->currenciesRepository->findById($payment->getCurrencyId());
+            $currencyForPayment = $this->currencyRepository->findById($payment->getCurrencyId());
             $currency = $currencyForPayment->getName();
             $paymentDate = $payment->getPaymentDate();
 
@@ -85,9 +85,9 @@ class PaymentPageController
         require_once "../Views/PaymentLists.php";
     }
 
-    private function generateReservationsSelectMenu(int $selectedReservationId = null) : ?array
+    private function generateReservationsSelectMenu(int $selectedReservationId = null): ?array
     {
-        $reservations = $this->reservationsRepository->getAllReservations();
+        $reservations = $this->reservationRepository->getAllReservations();
 
         $selectMenu = [];
 
@@ -104,19 +104,18 @@ class PaymentPageController
             ];
         }
         return $selectMenu;
-}
-
+    }
 
     private function generateCurrecySelectMenu(int $selectedCurrencyId = null): ?array
     {
-        $currencies = $this->currenciesRepository->getAllCurrencies();
+        $currencies = $this->currencyRepository->getAllCurrencies();
         $selectMenu = [];
 
         foreach ($currencies as $currency) {
             $currencyId = $currency->getId();
             $currencyName = $currency->getName();
             $selected = ($selectedCurrencyId !== null && $selectedCurrencyId === $currencyId) ? "selected" : "";
-            
+
             $selectMenu[] = [
                 'id' => $currencyId,
                 'name' => $currencyName,
@@ -126,7 +125,7 @@ class PaymentPageController
 
         return $selectMenu;
     }
-   
+
     private function create(): string
     {
         $isPostIncome = isset($_POST['submit']);
@@ -140,9 +139,9 @@ class PaymentPageController
         $price = htmlspecialchars($_POST['price']);
         $paymentDate = htmlspecialchars($_POST['paymentDate']);
 
-        $this->paymentsRepository->create(intval($reservationId), intval($currencyId), floatval($price), $paymentDate);
+        $this->paymentRepository->create(intval($reservationId), intval($currencyId), floatval($price), $paymentDate);
 
-        header("Location: ../Controllers/PaymentPageController.php?PaymentLists");
+        header("Location: ../Controllers/PaymentController.php?PaymentLists");
     }
 
     private function update()
@@ -150,7 +149,7 @@ class PaymentPageController
         $isCancelEditIncome = isset($_POST['cancel']);
 
         if ($isCancelEditIncome) {
-            header("Location: ../Controllers/PaymentPageController.php?PaymentLists");
+            header("Location: ../Controllers/PaymentController.php?PaymentLists");
             exit();
         }
 
@@ -158,9 +157,9 @@ class PaymentPageController
         $currencyId = htmlspecialchars($_POST['currencyId']);
         $price = htmlspecialchars($_POST['price']);
         $paymentDate = htmlspecialchars($_POST['paymentDate']);
-        $this->paymentsRepository->update(intval($reservationId), intval($currencyId), floatval($price), $paymentDate);
+        $this->paymentRepository->update(intval($reservationId), intval($currencyId), floatval($price), $paymentDate);
 
-        header("Location: ../Controllers/PaymentPageController.php?PaymentLists");
+        header("Location: ../Controllers/PaymentController.php?PaymentLists");
     }
 
     private function delete(): string
@@ -172,8 +171,8 @@ class PaymentPageController
         }
 
         $paymentId = intval($_POST['reservationId']);
-        $this->paymentsRepository->delete($paymentId);
+        $this->paymentRepository->delete($paymentId);
 
-        header("Location: ../Controllers/PaymentPageController.php?PaymentLists");
+        header("Location: ../Controllers/PaymentController.php?PaymentLists");
     }
 }

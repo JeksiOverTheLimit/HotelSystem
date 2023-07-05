@@ -16,28 +16,28 @@ include_once "../Models/Reservation.php";
 include_once "../Database/Repositories/ReservationGuestRepository.php";
 include_once "../Models/ReservationGuest.php";
 
-$callController = new EployeePageController();
+$callController = new EployeeController();
 
-class EployeePageController
+class EployeeController
 {
     private const VIEW_PATH = "../Views/employees.html";
     private const VIEW_LIST_PATH = "../Views/EmployeeList.html";
     private const NAV_PATH = "../Views/Navigations.html";
-    private CityRepository $citiesRepository;
-    private CountryRepository $countriesRepository;
-    private EmployeeRepository $employeesRepository;
+    private CityRepository $cityRepository;
+    private CountryRepository $countryRepository;
+    private EmployeeRepository $employeeRepository;
     private SelectMenuHelper $selectMenuHelper;
     private ReservationRepository $reservationRepository;
-    private ReservationGuestRepository  $reservationGuestsRepository;
+    private ReservationGuestRepository  $reservationGuestRepository;
 
     public function __construct()
     {
-        $this->citiesRepository = new CityRepository();
-        $this->countriesRepository = new CountryRepository();
-        $this->employeesRepository = new EmployeeRepository();
+        $this->cityRepository = new CityRepository();
+        $this->countryRepository = new CountryRepository();
+        $this->employeeRepository = new EmployeeRepository();
         $this->selectMenuHelper = new SelectMenuHelper(); 
         $this->reservationRepository = new ReservationRepository();
-        $this->reservationGuestsRepository = new ReservationGuestRepository();
+        $this->reservationGuestRepository = new ReservationGuestRepository();
         
         switch (true) {
             case isset($_POST['submit']):
@@ -71,7 +71,7 @@ class EployeePageController
     private function showUpdatePage()
     {
         $employeeId = $_GET['editId'];
-        $employee = $this->employeesRepository->findById(intval($employeeId));
+        $employee = $this->employeeRepository->findById(intval($employeeId));
         $selectedCountryId = $employee->getCountryId();
         $countryOptions = $this->selectMenuHelper->generateCountrySelectMenu($selectedCountryId);
         $selectedCityId = $employee->getCityId();
@@ -82,7 +82,7 @@ class EployeePageController
 
     private function showEmployeeListPage()
 {
-    $employees = $this->employeesRepository->getAllEmployees();
+    $employees = $this->employeeRepository->getAllEmployees();
     $employeess = [];
     foreach ($employees as $employee) {
         $employeeId = $employee->getId();
@@ -90,9 +90,9 @@ class EployeePageController
         $employeeLastName = $employee->getLastName();
         $employeeEGN = $employee->getEgn();
         $employeePhoneNumber = $employee->getPhoneNumber();
-        $countryId = $this->countriesRepository->findById($employee->getCountryId());
+        $countryId = $this->countryRepository->findById($employee->getCountryId());
         $country = $countryId->getName();
-        $cityId = $this->citiesRepository->findById($employee->getCityId());
+        $cityId = $this->cityRepository->findById($employee->getCityId());
         $city = $cityId->getName();
 
         $employeess[] = [
@@ -125,9 +125,9 @@ class EployeePageController
         $countryId = intval($_POST['Country']);
         $cityId = intval($_POST['City']);
 
-        $this->employeesRepository->create($firstName, $lastName, $egn, $phoneNumber, $countryId, $cityId);
+        $this->employeeRepository->create($firstName, $lastName, $egn, $phoneNumber, $countryId, $cityId);
 
-        header("Location: ../Controllers/EmployeePageController.php?EmployeeLists");
+        header("Location: ../Controllers/EmployeeController.php?EmployeeLists");
     }
 
     private function update()
@@ -135,7 +135,7 @@ class EployeePageController
         $isCancelEditIncome = isset($_POST['cancel']);
 
         if ($isCancelEditIncome) {
-            header("Location: ../Controllers/EmployeePageController.php?EmployeeLists");
+            header("Location: ../Controllers/EmployeeController.php?EmployeeLists");
             exit();
         }
 
@@ -147,9 +147,9 @@ class EployeePageController
         $countryId = intval($_POST['Country']);
         $cityId = intval($_POST['City']);
 
-        $this->employeesRepository->update($employeeId, $firstName, $lastName, $egn, $phoneNumber, $countryId, $cityId);
+        $this->employeeRepository->update($employeeId, $firstName, $lastName, $egn, $phoneNumber, $countryId, $cityId);
 
-        header("Location: ../Controllers/EmployeePageController.php?EmployeeLists");
+        header("Location: ../Controllers/EmployeeController.php?EmployeeLists");
     }
 
     private function delete(): string
@@ -163,7 +163,7 @@ class EployeePageController
         $isCancelEditIncome = isset($_POST['cancel']);
     
         if ($isCancelEditIncome) {
-            header("Location: ../Controllers/EmployeePageController.php?EmployeeLists");
+            header("Location: ../Controllers/EmployeeController.php?EmployeeLists");
             exit();
         }
     
@@ -171,15 +171,15 @@ class EployeePageController
         $reservations = $this->reservationRepository->findByEmployeeId($employeeId);
         foreach ($reservations as $reservation) {
             $reservationId = $reservation->getId();
-            $this->reservationGuestsRepository->deleteByReservationId($reservationId);
+            $this->reservationGuestRepository->deleteByReservationId($reservationId);
         }
     
         
         $this->reservationRepository->deleteByEmployeeId($employeeId);
     
-        $this->employeesRepository->delete($employeeId);
+        $this->employeeRepository->delete($employeeId);
     
-        header("Location: ../Controllers/EmployeePageController.php?EmployeeLists");
+        header("Location: ../Controllers/EmployeeController.php?EmployeeLists");
     }
     
 

@@ -7,17 +7,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../../assets/js/nav.js"></script>
 </head>
 
 <body>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id="navigation-placeholder">
+    <?php include_once "Navigations.php"; ?>
     </nav>
 
     <main>
         <h1 class="text-center">All rooms!</h1>
         <div class="container">
-            <form method="POST" action="RoomPageController.php?RoomLists">
+            <form method="POST" action="RoomController.php?RoomLists">
                 <select class="form-select" name="typeId">
                     <?php foreach ($typeOptions as $typeOption) { ?>
                         <option value='<?php echo $typeOption['id']; ?>' <?php echo $typeOption['selected'] ? 'selected' : ''; ?>>
@@ -58,7 +58,7 @@
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
 
                                                 <li><a class='dropdown-item' href="#" onclick="showDeletePopup(<?php echo $roomOption['id']; ?>)">Delete</a></li>
-                                                <li><a class='dropdown-item' href='../Controllers/RoomPageController.php?Edit&editId=<?php echo $roomOption['id']; ?>'>Edit</a></li>
+                                                <li><a class='dropdown-item' href='../Controllers/RoomController.php?Edit&editId=<?php echo $roomOption['id']; ?>'>Edit</a></li>
                                             </ul>
                                         </div>
                                     </td>
@@ -91,7 +91,7 @@
         formContainer.style.display = 'block';
 
         var deleteForm = document.getElementById('delete-form');
-        deleteForm.action = "../Controllers/RoomPageController.php?deleteId=" + roomId;
+        deleteForm.action = "../Controllers/RoomController.php?deleteId=" + roomId;
     }
 
     function hideDeletePopup() {

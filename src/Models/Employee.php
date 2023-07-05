@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-include_once "BaseId.php";
+include_once "BaseModel.php";
 
-class Employee extends BaseId
+class Employee extends BaseModel
 {
     private string $firstName;
     private string $lastName;

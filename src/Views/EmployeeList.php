@@ -8,15 +8,15 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../assets/js/CallCitySelectMenu.js"></script>
-    <script src="../../assets/js/nav.js"></script>
 </head>
 
 <body>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id="navigation-placeholder">
+    <?php include_once "Navigations.php"; ?>
     </nav>
     <h1 class="text-center">All Employees?</h1>
     <div class="container mt-3">
-        <table class="table table-primary table-striped">';
+        <table class="table table-primary table-striped">
             <thead>
                 <tr>
                     <th>First Name</th>
@@ -43,7 +43,7 @@
                                 <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"></button>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     <li><a class='dropdown-item' href="#" onclick="showDeletePopup(<?php echo $employee['id']; ?>)">Delete</a></li>
-                                    <li><a class='dropdown-item' href="../Controllers/EmployeePageController.php?Edit&editId=<?php echo $employee['id']; ?>">Edit</a></li>
+                                    <li><a class='dropdown-item' href="../Controllers/EmployeeController.php?Edit&editId=<?php echo $employee['id']; ?>">Edit</a></li>
                                 </ul>
                             </div>
                         </td>
@@ -74,7 +74,7 @@
         formContainer.style.display = 'block';
 
         var deleteForm = document.getElementById('delete-form');
-        deleteForm.action = "../Controllers/EmployeePageController.php?deleteId=" + employeeId;
+        deleteForm.action = "../Controllers/EmployeeController.php?deleteId=" + employeeId;
     }
 
     function hideDeletePopup() {

@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
-include_once "../Models/BaseId.php";
+include_once "../Models/BaseModel.php";
 
-class RoomExtraMap extends BaseId{
+class RoomExtraMap extends BaseModel{
        private int $roomId;
        private ?int $extraId;
 
