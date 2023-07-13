@@ -12,11 +12,11 @@
 <body>
     <main>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id = "navigation-placeholder">
-    <?php include_once "Navigations.php"; ?>
+    <?php include_once "navigation.php"; ?>
     </nav>
         <h1 class="text-center">You want to make a currency?</h1>
         <div class="container">
-            <form action="../Controllers/CountryController.php" method="post">
+            <form action="../Controllers/CurrencyController.php" method="post">
                 <div class="guest-fields mb-3">
                     <input type="hidden" name="countryId" value="<?php echo isset($_GET['editId']) ? $_GET['editId'] : ''; ?>">
                     <label for="name" class="form-label">Name of Currency</label>

@@ -11,10 +11,10 @@ class EmployeeRepository
         $this->database = new Database();
     }
 
-    public function create(string $firstName, string $lastName, string $egn, string $phoneNumber, int $countryId, int $cityId): Employee
+    public function create(string $firstName, string $lastName, string $egn, string $phoneNumber, int $countryId, int $cityId, string $email): Employee
     {
-        $query = "INSERT INTO employees (first_name, last_name, egn, phone_number, country_id, city_id) 
-        VALUES (:firstName, :lastName, :egn, :phoneNumber, :countryId, :cityId)";
+        $query = "INSERT INTO employees (first_name, last_name, egn, phone_number, email, country_id, city_id) 
+        VALUES (:firstName, :lastName, :egn, :phoneNumber, :email, :countryId, :cityId)";
 
         $connection = $this->database->getConnection();
         $statement = $connection->prepare($query);
@@ -23,6 +23,7 @@ class EmployeeRepository
         $statement->bindParam(':lastName', $lastName);
         $statement->bindParam(':egn', $egn);
         $statement->bindParam(':phoneNumber', $phoneNumber);
+        $statement->bindParam(':email', $email);
         $statement->bindParam(':countryId', $countryId);
         $statement->bindParam(':cityId', $cityId);
 
@@ -33,9 +34,9 @@ class EmployeeRepository
         return $this->findById(intval($id));
     }
 
-    public function update(int $id, string $firstName, string $lastName, string $egn, string $phoneNumber, int $countryId, int $cityId): void
+    public function update(int $id, string $firstName, string $lastName, string $egn, string $phoneNumber, int $countryId, int $cityId, string $email): void
     {
-        $query = "UPDATE employees SET first_name = :firstName, last_name = :lastName, egn = :egn, phone_number = :phoneNumber, country_id = :countryId, city_id = :cityId WHERE id = :id";
+        $query = "UPDATE employees SET first_name = :firstName, last_name = :lastName, egn = :egn, phone_number = :phoneNumber, email = :email, country_id = :countryId, city_id = :cityId WHERE id = :id";
 
         $connection = $this->database->getConnection();
         $statement = $connection->prepare($query);
@@ -44,6 +45,7 @@ class EmployeeRepository
         $statement->bindParam(':lastName', $lastName);
         $statement->bindParam(':egn', $egn);
         $statement->bindParam(':phoneNumber', $phoneNumber);
+        $statement->bindParam(':email', $email);
         $statement->bindParam(':countryId', $countryId);
         $statement->bindParam(':cityId', $cityId);
         $statement->execute();
@@ -70,7 +72,7 @@ class EmployeeRepository
 
     public function findById(?int $id): ?Employee
     {
-        $query = "SELECT id as id, first_name as firstName, last_name as lastName, egn as egn, phone_number as phoneNumber, country_id as countryId, city_id as cityId From employees Where id = :id";
+        $query = "SELECT id as id, first_name as firstName, last_name as lastName, egn as egn, phone_number as phoneNumber, email as email, country_id as countryId, city_id as cityId From employees Where id = :id";
 
         $connection = $this->database->getConnection();
         $statement = $connection->prepare($query);
@@ -84,7 +86,7 @@ class EmployeeRepository
 
     public function findByCountryId(?int $countryId): array
     {
-        $query = "SELECT id as id, first_name as firstName, last_name as lastName, egn as egn, phone_number as phoneNumber, country_id as countryId, city_id as cityId From employees Where country_id = :countryId";
+        $query = "SELECT id as id, first_name as firstName, email as email, last_name as lastName, egn as egn, phone_number as phoneNumber, country_id as countryId, city_id as cityId From employees Where country_id = :countryId";
 
         $connection = $this->database->getConnection();
         $statement = $connection->prepare($query);
@@ -98,7 +100,7 @@ class EmployeeRepository
 
     public function getAllEmployees(): array
     {
-        $query = "SELECT id, first_name as firstName, last_name as lastName, egn, phone_number as phoneNumber, country_id as countryId, city_id as cityId   FROM employees";
+        $query = "SELECT id, first_name as firstName, email as email, last_name as lastName, egn, phone_number as phoneNumber, country_id as countryId, city_id as cityId   FROM employees";
 
         $statement = $this->database->getConnection()->prepare($query);
         $statement->execute();

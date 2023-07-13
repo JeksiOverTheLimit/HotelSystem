@@ -12,7 +12,7 @@
 <body>
     <main>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id = "navigation-placeholder">
-    <?php include_once "Navigations.php"; ?>
+    <?php include_once "navigation.php"; ?>
     </nav>
         <h1 class="text-center">You want to make a country?</h1>
         <div class="container">

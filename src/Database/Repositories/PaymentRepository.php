@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 class PaymentRepository
 {
     private Database $database;
@@ -89,4 +88,17 @@ class PaymentRepository
 
         return $result;
     }
+
+    public function checkForAvaliblePayment($reservationId): bool {
+        $query = "SELECT reservation_id as reservationId, currency_id as currencyId, price as price, payment_date as paymentDate From payments Where reservation_id = :reservationId";
+    
+        $connection = $this->database->getConnection();
+        $statement = $connection->prepare($query);
+        $statement->bindParam(':reservationId', $reservationId);
+        $statement->execute();
+    
+        $payment = $statement->fetch(PDO::FETCH_ASSOC);
+        return !empty($payment); 
+    }
+    
 }

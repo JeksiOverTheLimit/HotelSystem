@@ -19,32 +19,31 @@ class SelectMenuHelper
     }
 
     public function generateCitySelectMenu(int $selectedCityId = null, int $selectedCountryId = null)
-{
-    $countryId = isset($_GET['countryId']) ? intval($_GET['countryId']) : $selectedCountryId;
-    $cities = $this->citiesRepository->getCitiesByCountryId($countryId);
+    {
+        $countryId = isset($_GET['countryId']) ? intval($_GET['countryId']) : $selectedCountryId;
+        $cities = $this->citiesRepository->getCitiesByCountryId($countryId);
 
-    $selectMenus = [];
+        $selectMenus = [];
 
-    foreach ($cities as $city) {
-        $cityId = $city->getId();
-        $cityName = $city->getName();
-        $selected = ($selectedCityId !== null && $selectedCityId === $cityId);
+        foreach ($cities as $city) {
+            $cityId = $city->getId();
+            $cityName = $city->getName();
+            $selected = ($selectedCityId !== null && $selectedCityId === $cityId);
 
-        $selectMenus[] = [
-            'id' => $cityId,
-            'name' => $cityName,
-            'selected' => $selected
-        ];
+            $selectMenus[] = [
+                'id' => $cityId,
+                'name' => $cityName,
+                'selected' => $selected
+            ];
+        }
+
+        if (!isset($_GET['countryId'])) {
+            return $selectMenus;
+        } else {
+            echo json_encode($selectMenus);
+            exit();
+        }
     }
-
-    if (!isset($_GET['countryId'])) {
-        return $selectMenus;
-    } else {
-        echo json_encode($selectMenus);
-        exit();
-    }
-}
-
 
     public function generateCountrySelectMenu(int $selectedCountryId = null): array
     {

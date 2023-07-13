@@ -17,19 +17,19 @@ include_once "../Database/Repositories/ReservationRepository.php";
 include_once "../Models/Reservation.php";
 include_once "../Database/Repositories/ReservationGuestRepository.php";
 include_once "../Models/ReservationGuest.php";
+include_once "../Services/RoomValidationService.php";
 
 $callController = new RoomController();
 
 class RoomController
 {
-    private const VIEW_PATH = "../Views/rooms.html";
-    private const VIEW_LIST_PATH = "../Views/RoomList.html";
     private RoomRepository $roomRepository;
     private RoomTypeRepository $roomTypeRepository;
     private RoomExtraRepository $roomExtraRepository;
     private RoomExtraMapRepository $roomExtraMapRepository;
     private ReservationRepository $reservationRepository;
     private ReservationGuestRepository  $reservationGuestRepository;
+    private RoomValidationService $roomValidationService;
 
     public function __construct()
     {
@@ -39,6 +39,7 @@ class RoomController
         $this->roomExtraMapRepository = new RoomExtraMapRepository();
         $this->reservationRepository = new ReservationRepository();
         $this->reservationGuestRepository = new ReservationGuestRepository();
+        $this->roomValidationService = new RoomValidationService();
 
         switch (true) {
             case isset($_POST['submit']):
@@ -88,7 +89,7 @@ class RoomController
         $typeOptions =  $this->generateTypesSelectMenu();
         $extraOptions = $this->generateExtraCheckboxes();
 
-        require_once "../Views/rooms.php";
+        require_once "../Views/room.php";
     }
 
     private function showRoomList()
@@ -125,7 +126,7 @@ class RoomController
                 'extras' => $extras
             ];
         }
-        require_once '../Views/RoomList.php';
+        require_once '../Views/room_list.php';
     }
 
     private function generateTypesSelectMenu(int $selectedTypesId = null): ?array
@@ -169,12 +170,13 @@ class RoomController
 
     private function create(): void
     {
-        $number = htmlspecialchars($_POST['number']);
-        $typeId = htmlspecialchars($_POST['typeId']);
-        $price = htmlspecialchars($_POST['price']);
+        $number = intval(htmlspecialchars($_POST['number']));
+        $typeId = intval(htmlspecialchars($_POST['typeId']));
+        $price = floatval(htmlspecialchars($_POST['price']));
         $extras = isset($_POST['extraIds']) ? $_POST['extraIds'] : [];
 
-        $room = $this->roomRepository->create(intval($number), intval($typeId), floatval($price));
+        $this->validateRoomInputField($number,$typeId,$price,$extras);
+        $room = $this->roomRepository->create($number, $typeId, $price);
 
         foreach ($extras as $extraId) {
             $extra = $this->roomExtraRepository->findById(intval($extraId));
@@ -182,6 +184,13 @@ class RoomController
         }
 
         header("Location: ../Controllers/RoomController.php?RoomLists");
+    }
+
+    private function validateRoomInputField($number,$typeId,$price,$extras){
+        $this->roomValidationService->validateRoomNumber($number);
+        $this->roomValidationService->validateType($typeId);
+        $this->roomValidationService->validatePrice($price);
+        $this->roomValidationService->validateExtras($extras);
     }
 
     private function update(): void
@@ -199,7 +208,7 @@ class RoomController
         $price = htmlspecialchars($_POST['price']);
         $extras = isset($_POST['extraIds']) ? $_POST['extraIds'] : [];
 
-
+        $this->validateRoomInputField($number,$typeId,$price,$extras);
         $currentExtras = $this->roomExtraMapRepository->getAllExtrasForRoom($roomId);
 
         foreach ($currentExtras as $currentExtra) {

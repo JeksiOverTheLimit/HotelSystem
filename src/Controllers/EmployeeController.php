@@ -15,30 +15,30 @@ include_once "../Database/Repositories/ReservationRepository.php";
 include_once "../Models/Reservation.php";
 include_once "../Database/Repositories/ReservationGuestRepository.php";
 include_once "../Models/ReservationGuest.php";
+include_once "../Services/UserValidationService.php";
 
 $callController = new EployeeController();
 
 class EployeeController
 {
-    private const VIEW_PATH = "../Views/employees.html";
-    private const VIEW_LIST_PATH = "../Views/EmployeeList.html";
-    private const NAV_PATH = "../Views/Navigations.html";
     private CityRepository $cityRepository;
     private CountryRepository $countryRepository;
     private EmployeeRepository $employeeRepository;
     private SelectMenuHelper $selectMenuHelper;
     private ReservationRepository $reservationRepository;
     private ReservationGuestRepository  $reservationGuestRepository;
+    private UserValidationService $userValidationService;
 
     public function __construct()
     {
         $this->cityRepository = new CityRepository();
         $this->countryRepository = new CountryRepository();
         $this->employeeRepository = new EmployeeRepository();
-        $this->selectMenuHelper = new SelectMenuHelper(); 
+        $this->selectMenuHelper = new SelectMenuHelper();
         $this->reservationRepository = new ReservationRepository();
         $this->reservationGuestRepository = new ReservationGuestRepository();
-        
+        $this->userValidationService = new UserValidationService();
+
         switch (true) {
             case isset($_POST['submit']):
                 $this->create();
@@ -55,17 +55,18 @@ class EployeeController
             case isset($_GET['EmployeeLists']):
                 echo $this->showEmployeeListPage();
                 break;
-                case isset($_GET['Edit']):
-                    echo $this->showUpdatePage();
-                    break;
-        }        
+            case isset($_GET['Edit']):
+                echo $this->showUpdatePage();
+                break;
+        }
     }
 
-    private function showEmployeeCreatePage(){
+    private function showEmployeeCreatePage()
+    {
         $selectedCountryId = null;
         $countryOptions = $this->selectMenuHelper->generateCountrySelectMenu($selectedCountryId);
         $cityOptions = $this->selectMenuHelper->generateCitySelectMenu();
-        require_once '../Views/employees.php';
+        require_once '../Views/employee.php';
     }
 
     private function showUpdatePage()
@@ -78,36 +79,35 @@ class EployeeController
         $cityOptions = $this->selectMenuHelper->generateCitySelectMenu($selectedCityId, $selectedCountryId);
         require_once '../Views/employee_form.php';
     }
-    
 
     private function showEmployeeListPage()
-{
-    $employees = $this->employeeRepository->getAllEmployees();
-    $employeess = [];
-    foreach ($employees as $employee) {
-        $employeeId = $employee->getId();
-        $employeeFirstName = $employee->getFirstName();
-        $employeeLastName = $employee->getLastName();
-        $employeeEGN = $employee->getEgn();
-        $employeePhoneNumber = $employee->getPhoneNumber();
-        $countryId = $this->countryRepository->findById($employee->getCountryId());
-        $country = $countryId->getName();
-        $cityId = $this->cityRepository->findById($employee->getCityId());
-        $city = $cityId->getName();
+    {
+        $employees = $this->employeeRepository->getAllEmployees();
+        $employeess = [];
+        foreach ($employees as $employee) {
+            $employeeId = $employee->getId();
+            $employeeFirstName = $employee->getFirstName();
+            $employeeLastName = $employee->getLastName();
+            $employeeEGN = $employee->getEgn();
+            $employeePhoneNumber = $employee->getPhoneNumber();
+            $countryId = $this->countryRepository->findById($employee->getCountryId());
+            $country = $countryId->getName();
+            $cityId = $this->cityRepository->findById($employee->getCityId());
+            $city = $cityId->getName();
 
-        $employeess[] = [
-            'id' => $employeeId,
-            'firstName' => $employeeFirstName,
-            'lastName' => $employeeLastName,
-            'egn' => $employeeEGN,
-            'phoneNumber' => $employeePhoneNumber,
-            'country' => $country,
-            'city' => $city
-        ];
+            $employeess[] = [
+                'id' => $employeeId,
+                'firstName' => $employeeFirstName,
+                'lastName' => $employeeLastName,
+                'egn' => $employeeEGN,
+                'phoneNumber' => $employeePhoneNumber,
+                'country' => $country,
+                'city' => $city
+            ];
+        }
+
+        require_once '../Views/employee_list.php';
     }
-
-    require_once '../Views/EmployeeList.php';
-}
 
 
     private function create(): string
@@ -118,16 +118,30 @@ class EployeeController
             return '';
         }
 
-        $firstName = htmlspecialchars($_POST['firstName']);
-        $lastName = htmlspecialchars($_POST['lastName']);
+        $names = htmlspecialchars($_POST['names']);
+        $nameParts = explode(' ', $names);
+        $firstName = isset($nameParts[0]) ? $nameParts[0] : '';
+        $lastName = isset($nameParts[1]) ? $nameParts[1] : '';
         $egn = htmlspecialchars($_POST['egn']);
         $phoneNumber = htmlspecialchars($_POST['phone']);
         $countryId = intval($_POST['Country']);
-        $cityId = intval($_POST['City']);
+        $cityId = isset($_POST['City']) ? intval($_POST['City']) : 0;
+        $email = isset($_POST['email']) ? $_POST['email'] : '';
 
-        $this->employeeRepository->create($firstName, $lastName, $egn, $phoneNumber, $countryId, $cityId);
+        $this->validateInputField($firstName,$lastName,$egn,$phoneNumber,$countryId, $email);
+        $this->employeeRepository->create($firstName, $lastName, $egn, $phoneNumber, $countryId, $cityId, $email);
 
         header("Location: ../Controllers/EmployeeController.php?EmployeeLists");
+    }
+
+    private function validateInputField($firstName, $lastName, $egn, $phoneNumber, $countryId, $email): void
+    {
+      $this->userValidationService->validateName($firstName);
+      $this->userValidationService->validateName($lastName);
+      $this->userValidationService->validateEgn($egn);
+      $this->userValidationService->validatePhone($phoneNumber);
+      $this->userValidationService->validateCountry($countryId);
+      $this->userValidationService->validateEmail($email);
     }
 
     private function update()
@@ -140,14 +154,18 @@ class EployeeController
         }
 
         $employeeId = intval($_POST['employeeId']);
-        $firstName = htmlspecialchars($_POST['firstName']);
-        $lastName = htmlspecialchars($_POST['lastName']);
+        $names = htmlspecialchars($_POST['names']);
+        $nameParts = explode(' ', $names);
+        $firstName = isset($nameParts[0]) ? $nameParts[0] : '';
+        $lastName = isset($nameParts[1]) ? $nameParts[1] : '';
         $egn = htmlspecialchars($_POST['egn']);
         $phoneNumber = htmlspecialchars($_POST['phone']);
         $countryId = intval($_POST['Country']);
-        $cityId = intval($_POST['City']);
+        $cityId = isset($_POST['City']) ? intval($_POST['City']) : 0;
+        $email = isset($_POST['email']) ? $_POST['email'] : '';
 
-        $this->employeeRepository->update($employeeId, $firstName, $lastName, $egn, $phoneNumber, $countryId, $cityId);
+        $this->validateInputField($firstName,$lastName,$egn,$phoneNumber,$countryId, $email);
+        $this->employeeRepository->update($employeeId, $firstName, $lastName, $egn, $phoneNumber, $countryId, $cityId, $email);
 
         header("Location: ../Controllers/EmployeeController.php?EmployeeLists");
     }
@@ -155,32 +173,30 @@ class EployeeController
     private function delete(): string
     {
         $isPostIncome = isset($_POST['delete']);
-    
+
         if (!$isPostIncome) {
             return '';
         }
-    
+
         $isCancelEditIncome = isset($_POST['cancel']);
-    
+
         if ($isCancelEditIncome) {
             header("Location: ../Controllers/EmployeeController.php?EmployeeLists");
             exit();
         }
-    
+
         $employeeId = intval($_GET['deleteId']);
         $reservations = $this->reservationRepository->findByEmployeeId($employeeId);
         foreach ($reservations as $reservation) {
             $reservationId = $reservation->getId();
             $this->reservationGuestRepository->deleteByReservationId($reservationId);
         }
-    
-        
+
+
         $this->reservationRepository->deleteByEmployeeId($employeeId);
-    
+
         $this->employeeRepository->delete($employeeId);
-    
+
         header("Location: ../Controllers/EmployeeController.php?EmployeeLists");
     }
-    
-
 }

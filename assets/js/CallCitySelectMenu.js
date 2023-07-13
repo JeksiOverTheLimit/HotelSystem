@@ -1,6 +1,6 @@
 function fetchCitiesByCountry() {
     const countryId = document.getElementById('countries').value;
-    fetch(`../Controllers/EmployeePageController.php?Employees&countryId=${countryId}`)
+    fetch(`../Controllers/EmployeeController.php?Employees&countryId=${countryId}`)
         .then(response => response.json())
         .then(result => {
             const citiesSelect = document.getElementById("cities");

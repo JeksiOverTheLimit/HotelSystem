@@ -12,7 +12,7 @@
 
 <body>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id="navigation-placeholder">
-    <?php include_once "Navigations.php"; ?>
+    <?php include_once "navigation.php"; ?>
     </nav>
 
     <main>
@@ -30,16 +30,28 @@
             </div>
 
             <div class="mb-3">
-                
-            </div>
+                <label for="roooms" class="form-label">Rooms</label>
+                <select class="form-select" name="roomId" id="rooms">
+                <option value='' selected>Изберете стая</option>";
+                <?php foreach ($roomSelectMenu as $room) { ?>
+                        <option value='<?php echo $room['id']; ?>' <?php echo $room['selected'] ? 'selected' : ''; ?>>
+                            <?php echo $room['name'] . ' - ' . $room['types'] . ' - ' . $room['extra'] ; ?>
+                        </option>
+                    <?php } ?>
+                </select>
+                </div>
 
             <div class="mb-3">
-                <label for="countries" class="form-label">Contries</label>';
-                <select class="form-select" id="countries" name="Country" onchange="fetchCitiesByCountry()">';
-                    
+                        <label for="countries" class="form-label">Contries</label>';
+                        <select  class = "form-select" id="countries" name="Country" onchange="fetchCitiesByCountry()" >';
+                        <option value='' selected>Изберете държава</option>";
+                        <?php foreach ($countrySelectMenu as $country) { ?>
+                        <option value='<?php echo $country['id']; ?>' <?php echo $country['selected'] ? 'selected' : ''; ?>>
+                            <?php echo $country['name'] ;?>
+                        </option>
+                    <?php } ?>
                 </select>
             </div>
-
             <button type="submit" class="btn btn-secondary">Филтрирай</button>
 
         </form>
@@ -57,6 +69,8 @@
                             <th>Guest Names</th>
                             <th>Country</th>
                             <th>City</th>
+                            <th>Price</th>
+                            <th>Overnight Days</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -72,11 +86,14 @@
                             <td><a href="../Controllers/ReservationController.php?guestPrivatePageId=<?php echo $reservation['guestId']?>"><?php echo $reservation['guestName']; ?></a></td>
                             <td><?php echo $reservation['guestCountry']; ?></td>
                             <td><?php echo $reservation['guestCity'];?></td>
+                            <td><?php echo $reservation['price']; ?></td>
+                            <td><?php echo $reservation['overnightStays'];?></td>
                             <td>
                                 <div class="dropdown"><button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false"></button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     <li><a class='dropdown-item' href="#" onclick="showDeletePopup(<?php echo $reservation['id']; ?>)">Delete</a></li>
                                         <li><a class='dropdown-item' href='../Controllers/ReservationController.php?Edit&reservationId=<?php echo $reservation['id'];?>&guestId=<?php echo $reservation['guestId'];?>'>Edit</a></li>
+                                        <li><a class='dropdown-item' href='../Controllers/PaymentController.php?reservationId=<?php echo $reservation['id'];?>'>Pay</a></li>
                                     </ul>
                                 </div>
                             </td>

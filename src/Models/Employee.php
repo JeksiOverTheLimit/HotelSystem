@@ -10,6 +10,7 @@ class Employee extends BaseModel
     private string $lastName;
     private string $egn;
     private string $phoneNumber;
+    private string $email;
     private int $countryId;
     private int $cityId;
 
@@ -40,8 +41,9 @@ class Employee extends BaseModel
 
     public function setEgn(string $value): void
     {
-        $this->egn = $value;
+       $this->egn = $value;
     }
+
 
     public function getPhoneNumber(): string
     {
@@ -71,5 +73,13 @@ class Employee extends BaseModel
     public function setCityId(int $value): void
     {
         $this->cityId = $value;
+    }
+
+    public function getEmail(): string {
+        return $this->email;
+    }
+
+    public function setEmail(string $value) {
+        $this->email = $value;
     }
 }

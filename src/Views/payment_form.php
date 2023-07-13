@@ -10,44 +10,43 @@
 </head>
 
 <body>
-    <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id = "navigation-placeholder">
-    <?php include_once "Navigations.php"; ?>
+    <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id="navigation-placeholder">
+        <?php include_once "navigation.php"; ?>
     </nav>
     <h1 class="text-center">You want to Make a payment?</h1>
     <br>
     <div class="container">
-        <form action ='../Controllers/PaymentController.php' method="post">
-        <div class="mb-3">
+        <form action='../Controllers/PaymentController.php' method="post">
+            <div class="mb-3">
                 <input type="hidden" name='id' value="<?php echo isset($_GET['editId']) ? $_GET['editId'] : ''; ?>">
                 <label for="reservation" class="form-label">Choose Reservation</label>
-                <select class="form-select" id="reservation" name="reservationId" >
+                <select class="form-select" id="reservation" name="reservationId">
                     <option value='' selected>Изберете Резервация</option>";
                     <?php foreach ($reservationOptions as $reservationOption) { ?>
                         <option value='<?php echo $reservationOption['id']; ?>' <?php echo $reservationOption['selected'] ? 'selected' : ''; ?>>
                             <?php echo 'Номер на резервацията ' .  $reservationOption['id'] . ' Начална дата ' . $reservationOption['startingDate'] . ' Крайна дата ' . $reservationOption['finalDate']; ?>
                         </option>
 
-                        <?php } ?>
+                    <?php } ?>
                 </select>
             </div>
 
 
             <div class="mb-3">
-            <label for="reservation" class="form-label">Choose Currency</label>
-                <select class="form-select" id="currency" name="currencyId" >
+                <label for="reservation" class="form-label">Choose Currency</label>
+                <select class="form-select" id="currency" name="currencyId">
                     <option value='' selected>Изберете Валута</option>";
                     <?php foreach ($currencyOptions as $currencyOption) { ?>
                         <option value='<?php echo $currencyOption['id']; ?>' <?php echo $currencyOption['selected'] ? 'selected' : ''; ?>>
                             <?php echo $currencyOption['name']; ?>
                         </option>
-                        <?php } ?>
+                    <?php } ?>
                 </select>
             </div>
 
             <div class="mb-3">
                 <label for="price" class="form-label">Price</label>
-                <input type="text" class="form-control" name="price" id="price" value="<?php echo isset($_GET['editId']) ? $payment->getPrice() : ''; ?>">
-
+                <input type="text" class="form-control" name="price" id="price" value="<?php echo (isset($_GET['editId']) ? $payment->getPrice() : (isset($_GET['reservationId']) ? $price : '')); ?>">
             </div>
 
             <div class="mb-3">
@@ -61,7 +60,7 @@
             <button class="btn btn-primary" type="submit" name="<?php echo isset($_GET['editId'])  ? 'update' : 'submit'; ?>">Send</button>
         </form>
     </div>
-    
+
 </body>
 
 </html>

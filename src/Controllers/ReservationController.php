@@ -28,13 +28,13 @@ include_once "../Models/RoomExtraMap.php";
 include_once "../Controllers/SelectMenuHelper.php";
 include_once "../Database/Repositories/PaymentRepository.php";
 include_once "../Models/Payment.php";
+include_once "../Services/ReservationValidationService.php";
+include_once "../Services/UserValidationService.php";
 
 $callController = new ReservationController();
 
 class ReservationController
 {
-    private const VIEW_PATH = "../Views/Reservations.html";
-    private const VIEW_LIST_PATH = "../Views/ReservationList.html";
     private RoomRepository $roomRepository;
     private RoomTypeRepository $roomTypeRepository;
     private ReservationRepository $reservationRepository;
@@ -48,6 +48,8 @@ class ReservationController
     private RoomExtraMapRepository $roomExtraMapRepository;
     private SelectMenuHelper $selectMenuHelper;
     private PaymentRepository $paymentRepository;
+    private ReservationValidationService $reservationValidationService;
+    private UserValidationService $userValidationService;
 
     public function __construct()
     {
@@ -64,6 +66,8 @@ class ReservationController
         $this->roomExtraMapRepository = new RoomExtraMapRepository();
         $this->selectMenuHelper = new SelectMenuHelper();
         $this->paymentRepository = new PaymentRepository();
+        $this->reservationValidationService = new ReservationValidationService();
+        $this->userValidationService = new UserValidationService();
 
         switch (true) {
             case isset($_POST['submit']):
@@ -147,13 +151,17 @@ class ReservationController
         $statusSelectMenu = $this->generateStatusSelectMenu();
         $countrySelectMenu = $this->selectMenuHelper->generateCountrySelectMenu();
         $citySelectMenu = $this->selectMenuHelper->generateCitySelectMenu();
+        
 
-        require_once "../Views/Reservations.php";
+        require_once "../Views/reservation.php";
     }
 
     private function showReservationList(): void
     {
-        $allReservations = $this->reservationRepository->getAllReservations();
+        $allReservations = $this->filterHandle();
+        $countrySelectMenu = $this->selectMenuHelper->generateCountrySelectMenu();
+        $roomSelectMenu = $this->generateRoomSelectMenu();
+
         $reservations = [];
         foreach ($allReservations as $reservation) {
             $reservationId = $reservation->getId();
@@ -181,6 +189,13 @@ class ReservationController
             $guestCity = $this->cityRepository->findById($roomGuest->getCityId());
             $guestCityName =  $guestCity->getName();
 
+            $startDate = new DateTime($reservationStartingDate);
+            $endDate = new DateTime($reservationFinalDate);
+            $interval = $startDate->diff($endDate);
+            $overnightStays = $interval->days;
+
+            $price = $reservation->getPrice();
+
             $reservations[] = [
                 'id' => $reservationId,
                 'startingDate' => $reservationStartingDate,
@@ -192,10 +207,12 @@ class ReservationController
                 'guestId' => $guestId,
                 'guestName' => $roomGuestName,
                 'guestCountry' => $guestCountryName,
-                'guestCity' => $guestCityName
+                'guestCity' => $guestCityName,
+                'overnightStays' => $overnightStays,
+                'price' => $price
             ];
         }
-        require_once "../Views/ReservationList.php";
+        require_once "../Views/reservation_list.php";
     }
 
     private function showUpdatePage(): void
@@ -220,6 +237,7 @@ class ReservationController
         $countrySelectMenu = $this->selectMenuHelper->generateCountrySelectMenu($roomGuest->getCountryId());
         $citySelectMenu = $this->selectMenuHelper->generateCitySelectMenu($roomGuest->getCityId(), $roomGuest->getCountryId());
 
+        $price = $reservation->getPrice();
         require_once '../Views/reservation_form.php';
     }
 
@@ -332,6 +350,7 @@ class ReservationController
         }
 
         return $selectMenu;
+        
     }
 
     private function create(): ?string
@@ -343,55 +362,62 @@ class ReservationController
             return '';
         }
 
-        $employeeId = htmlspecialchars($_POST['employeeId']);
-        $roomId = htmlspecialchars($_POST['roomId']);
+        $employeeId = intval(htmlspecialchars($_POST['employeeId']));
+        $roomId = intval(htmlspecialchars($_POST['roomId']));
         $startingDate = htmlspecialchars($_POST['startingDate']);
         $finalDate = htmlspecialchars($_POST['finalDate']);
-        $statusId = htmlspecialchars($_POST['statusId']);
+        $statusId = intval(htmlspecialchars($_POST['statusId']));
+        $price = intval(htmlspecialchars($_POST['price']));
         $guestFirstName = htmlspecialchars($_POST['firstName']);
         $guestLastName = htmlspecialchars($_POST['lastName']);
         $guestEgn = htmlspecialchars($_POST['egn']);
         $guestPhone = htmlspecialchars($_POST['phoneNumber']);
-        $guestCity = htmlspecialchars($_POST['City']);
-        $guestCountry = htmlspecialchars($_POST['Country']);
-
-        if ($startingDate > $finalDate) {
-            throw new Exception("Няма как началната дата да е по голяма от крайната");
-        }
+        $guestCity = isset($_POST['City']) ? intval(htmlspecialchars($_POST['City'])) : null;
+        $guestCountry = intval(htmlspecialchars($_POST['Country']));
+        
+        $this->validateReservationInputFields($employeeId, $roomId, $startingDate, $finalDate, $statusId, $price);
+        $this->validateGuestInputFields($guestFirstName, $guestLastName, $guestEgn, $guestPhone, $guestCountry, $guestCity);
 
         $foundGuest = $this->guestRepository->findByEGN($guestEgn);
 
-        $reservation = $this->reservationRepository->create(intval($employeeId), intval($roomId), $startingDate, $finalDate, intval($statusId));
+        $reservation = $this->reservationRepository->create($employeeId, $roomId, $startingDate, $finalDate, $statusId, $price);
 
         if ($foundGuest !== null) {
             $this->reservationGuestRepository->create($reservation->getId(), $foundGuest->getId());
         } else {
-            $guest = $this->guestRepository->create($guestFirstName, $guestLastName, $guestEgn, $guestPhone, intval($guestCountry), intval($guestCity));
+            $guest = $this->guestRepository->create($guestFirstName, $guestLastName, $guestEgn, $guestPhone, $guestCountry, $guestCity);
             $this->reservationGuestRepository->create($reservation->getId(), $guest->getId());
         }
 
         header("Location: ../Controllers/ReservationController.php?ReservationLists");
     }
 
-    private function filterHandle(string $reservationStartingDate = '', string $reservationFinalDate = '', int $roomId = null, int $countryId = null): ?array
+    private function validateReservationInputFields($employeeId, $roomId, $startingDate, $finalDate, $statusId, $price): void {
+        $this->reservationValidationService->validateEmployee($employeeId);
+        $this->reservationValidationService->validateRoom($roomId);
+        $this->reservationValidationService->validateDate($startingDate, $finalDate);
+        $this->reservationValidationService->validateStatus($statusId);
+        $this->reservationValidationService->validatePrice($price);
+    }
+
+    private function validateGuestInputFields($guestFirstName, $guestLastName, $guestEgn, $guestPhone, $guestCountry, $guestCity): void
     {
-        if ($reservationStartingDate == '' && $reservationFinalDate == '' && $roomId == null) {
-            $reservations = $this->reservationRepository->getAllReservations();
-        } else if ($reservationStartingDate != '' && $reservationFinalDate != '' && $roomId != null) {
-            $reservations = $this->reservationRepository->getAllReservationByRoomAndPeriod($reservationStartingDate, $reservationFinalDate, $roomId);
-        } else if ($reservationStartingDate == '' && $reservationFinalDate == '' && $countryId != null) {
-            $guests = $this->guestRepository->findByCountryId($countryId);
+      $this->userValidationService->validateName($guestFirstName);
+      $this->userValidationService->validateName($guestLastName);
+      $this->userValidationService->validateEgn($guestEgn);
+      $this->userValidationService->validatePhone($guestPhone);
+      $this->userValidationService->validateCountry($guestCountry);
+    }
 
-            foreach ($guests as $guest) {
-                $reservationsByCountry = $this->reservationGuestRepository->findByGuestId($guest->getId());
+    private function filterHandle(): ?array
+    {
+        $reservationStartingDate = isset($_POST['startingDate']) ? $_POST['startingDate'] : '';
+        $reservationFinalDate = isset($_POST['finalDate']) ? $_POST['finalDate'] : '';
+        $roomId = isset($_POST['roomId']) ? intval($_POST['roomId']) : null;
+        $countryId = isset($_POST['Country']) ? intval($_POST['Country']) : null;
 
-                $reservations = $this->reservationRepository->getAllReservationById($reservationsByCountry->getReservationId());
-            }
-        } else {
-            $reservations = $this->reservationRepository->getAllReservationByRoom($roomId);
-        }
-
-        return $reservations;
+       $reservations = $this->reservationRepository->filterReservations($reservationStartingDate,  $reservationFinalDate,  $roomId,  $countryId);
+       return $reservations;
     }
 
     private function update()
@@ -409,21 +435,25 @@ class ReservationController
             exit();
         }
         $reservationId = $_POST['reservationId'];
-        $employeeId = htmlspecialchars($_POST['employeeId']);
-        $roomId = htmlspecialchars($_POST['roomId']);
+        $employeeId = intval(htmlspecialchars($_POST['employeeId']));
+        $roomId = intval(htmlspecialchars($_POST['roomId']));
         $startingDate = htmlspecialchars($_POST['startingDate']);
         $finalDate = htmlspecialchars($_POST['finalDate']);
-        $statusId = htmlspecialchars($_POST['statusId']);
+        $statusId = intval(htmlspecialchars($_POST['statusId']));
+        $price = intval(htmlspecialchars($_POST['price']));
 
         $guestId = $_POST['guestId'];
         $guestFirstName = htmlspecialchars($_POST['firstName']);
         $guestLastName = htmlspecialchars($_POST['lastName']);
         $guestEgn = htmlspecialchars($_POST['egn']);
         $guestPhone = htmlspecialchars($_POST['phoneNumber']);
-        $guestCity = htmlspecialchars($_POST['City']);
-        $guestCountry = htmlspecialchars($_POST['Country']);
-
-        $this->reservationRepository->update(intval($reservationId), intval($employeeId), intval($roomId), $startingDate, $finalDate, intval($statusId));
+        $guestCountry = intval(htmlspecialchars($_POST['Country']));
+        $guestCity = isset($_POST['City']) ? intval(htmlspecialchars($_POST['City'])) : null;
+        
+        $this->validateReservationInputFields($employeeId, $roomId, $startingDate, $finalDate, $statusId, $price);
+        $this->validateGuestInputFields($guestFirstName, $guestLastName, $guestEgn, $guestPhone, $guestCountry, $guestCity);
+        
+        $this->reservationRepository->update(intval($reservationId), intval($employeeId), intval($roomId), $startingDate, $finalDate, intval($statusId), $price);
         $this->guestRepository->update(intval($guestId), $guestFirstName, $guestLastName, $guestEgn, $guestPhone, intval($guestCountry), intval($guestCity));
 
         header("Location: ../Controllers/ReservationController.php?ReservationLists");

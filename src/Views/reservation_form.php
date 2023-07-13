@@ -12,7 +12,7 @@
 
 <body>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id = "navigation-placeholder">
-    <?php include_once "Navigations.php"; ?>
+    <?php include_once "navigation.php"; ?>
     </nav>
 
     <main>
@@ -24,6 +24,7 @@
                 <input type="hidden" name="reservationId" value="<?php echo isset($_GET['reservationId']) ? $_GET['reservationId'] : ''; ?>">
                 <label for="employees" class="form-label">Employees</label>
                 <select class="form-select" name="employeeId" id="employees">
+                <option value='' selected>Изберете работник</option>";
                     <?php foreach ($employeeSelectMenu as $employee) { ?>
                         <option value='<?php echo $employee['id']; ?>' <?php echo $employee['selected'] ? 'selected' : ''; ?>>
                             <?php echo $employee['name']; ?>
@@ -35,6 +36,7 @@
                 <div class="mb-3">
                 <label for="roooms" class="form-label">Rooms</label>
                 <select class="form-select" name="roomId" id="rooms">
+                <option value='' selected>Изберете стая</option>";
                 <?php foreach ($roomSelectMenu as $room) { ?>
                         <option value='<?php echo $room['id']; ?>' <?php echo $room['selected'] ? 'selected' : ''; ?>>
                             <?php echo $room['name'] . ' - ' . $room['types'] . ' - ' . $room['extra'] ; ?>
@@ -57,12 +59,18 @@
                 <div class="mb-3">
                <label for="status" class="form-label">Status</label>
                <select class="form-select" name="statusId" id="status">
+               <option value='' selected>Изберете Статус</option>";
                <?php foreach ($statusSelectMenu as $status) { ?>
                         <option value='<?php echo $status['id']; ?>' <?php echo $status['selected'] ? 'selected' : ''; ?>>
                             <?php echo $status['name'] ;?>
                         </option>
                     <?php } ?>
                 </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="price" class="form-label">Price</label>
+                    <input type="text" class="form-control" name="price" id="price" value="<?php echo isset($_GET['reservationId']) ? $price : '' ;?>">
                 </div>
 
                 <fieldset id="guestContainer">
@@ -86,11 +94,11 @@
 
                     <div class="guest-fields mb-3">
                         <label for="phoneNumber" class="form-label ">Phone</label>
-                        <input type="text" class="form-control" name="phoneNumber" id="phoneNumber" value="<?php echo isset($_GET['guestId']) ? $guestPhone :''; ?>">
+                        <input type="text" class="form-control" name="phoneNumber" id="phoneNumber" value="+359<?php echo isset($_GET['guestId']) ? $guestPhone : '';?>">
                     </div>
 
                     <div class="mb-3">
-                        <label for="countries" class="form-label">Contries</label>';
+                        <label for="countries" class="form-label">Contries</label>
                         <select  class = "form-select" id="countries" name="Country" onchange="fetchCitiesByCountry()" >';
                         <option value='' selected>Изберете държава</option>";
                         <?php foreach ($countrySelectMenu as $country) { ?>
@@ -102,7 +110,7 @@
                     </div>
         
                     <div class="mb-3">
-                       <label for="cities" class="form-label">Cities</label>;
+                       <label for="cities" class="form-label">Cities</label>
                         <select class="form-select" id="cities" name="City">
                         <?php foreach ($citySelectMenu as $city) { ?>
                         <option value='<?php echo $city['id']; ?>' <?php echo $city['selected'] ? 'selected' : ''; ?>>

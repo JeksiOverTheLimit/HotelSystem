@@ -6,8 +6,6 @@ $callController = new HomeController();
 
 class HomeController
 {
-    private const VIEW_PATH = "../Views/index.html";
-
     public function __construct()
     {
         echo $this->showHomePage();

@@ -11,7 +11,8 @@ class Reservation extends BaseModel
     private string $startingDate;
     private string $finalDate;
     private int $statusId;
-    
+    private float $price;
+
     public function getEmployeeId(): int
     {
         return $this->employeeId;
@@ -39,23 +40,23 @@ class Reservation extends BaseModel
 
     public function setStartingDate(string $value): void
     {
-        if ($value == null){
-          throw new Exception('NE MOJE Nachalnata data da e prazna');
+        if ($value == null) {
+            throw new Exception('NE MOJE Nachalnata data da e prazna');
         }
         $this->startingDate = $value;
     }
 
     public function getFinalDate(): string
     {
-  
+
         return $this->finalDate;
     }
 
     public function setFinalDate(string $value): void
     {
-        if ($value == null){
+        if ($value == null) {
             throw new Exception('NE MOJE Krainata data da e prazna');
-          }
+        }
         $this->finalDate = $value;
     }
 
@@ -67,5 +68,15 @@ class Reservation extends BaseModel
     public function setStatusId(int $value): void
     {
         $this->statusId = $value;
+    }
+
+    public function getPrice(): float
+    {
+        return $this->price;
+    }
+
+    public function setPrice(int $value): void
+    {
+        $this->price = $value;
     }
 }

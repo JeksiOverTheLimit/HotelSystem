@@ -9,22 +9,23 @@ include_once "../Models/Currency.php";
 include_once "../Database/Repositories/CurrencyRepository.php";
 include_once "../Models/Reservation.php";
 include_once "../Database/Repositories/ReservationRepository.php";
+include_once "../Services/PaymentValidationService.php";
 
 $payment = new PaymentController();
 
 class PaymentController
 {
-    private const VIEW_PATH = "../Views/Payment.html";
-    private const VIEW_LIST_PATH = "../Views/PaymentLists.html";
     private PaymentRepository $paymentRepository;
     private CurrencyRepository $currencyRepository;
     private ReservationRepository $reservationRepository;
+    private PaymentValidationService $paymentValidationService;
 
     public function __construct()
     {
         $this->paymentRepository = new PaymentRepository();
         $this->currencyRepository = new CurrencyRepository();
         $this->reservationRepository = new ReservationRepository();
+        $this->paymentValidationService = new PaymentValidationService();
 
         switch (true) {
             case isset($_POST['submit']):
@@ -36,7 +37,7 @@ class PaymentController
             case isset($_POST['delete']):
                 $this->delete();
                 break;
-            case isset($_GET['Payment']):
+            case isset($_GET['Payment']) || isset($_GET['reservationId']):
                 echo $this->showPaymentPage();
                 break;
             case isset($_GET['PaymentLists']):
@@ -50,9 +51,11 @@ class PaymentController
 
     private function showPaymentPage()
     {
-        $reservationOptions = $this->generateReservationsSelectMenu();
+        $reservationId = isset($_GET['reservationId']) ? intval($_GET['reservationId']) : null;
+        $reservationOptions = isset($_GET['reservationId']) ? $this->generateReservationsSelectMenu($reservationId) : $this->generateReservationsSelectMenu();
+        $price = isset($_GET['reservationId']) ? $this->reservationRepository->findById($reservationId)->getPrice() : '';
         $currencyOptions = $this->generateCurrecySelectMenu();
-        require_once '../Views/Payment.php';
+        require_once '../Views/payment.php';
     }
 
     private function showUpdatePage()
@@ -82,7 +85,7 @@ class PaymentController
                 'date' => $paymentDate
             ];
         }
-        require_once "../Views/PaymentLists.php";
+        require_once "../Views/payment_list.php";
     }
 
     private function generateReservationsSelectMenu(int $selectedReservationId = null): ?array
@@ -139,9 +142,17 @@ class PaymentController
         $price = htmlspecialchars($_POST['price']);
         $paymentDate = htmlspecialchars($_POST['paymentDate']);
 
+        $this->validateInputField($reservationId, $currencyId, $price, $paymentDate);
         $this->paymentRepository->create(intval($reservationId), intval($currencyId), floatval($price), $paymentDate);
 
         header("Location: ../Controllers/PaymentController.php?PaymentLists");
+    }
+
+    private function validateInputField($reservationId, $currencyId, $price, $paymentDate){
+         $this->paymentValidationService->validateReservationId($reservationId);
+         $this->paymentValidationService->validateCurrencyId($currencyId);
+         $this->paymentValidationService->validatePrice($price);
+         $this->paymentValidationService->validatePaymentDate($paymentDate);
     }
 
     private function update()
@@ -157,6 +168,8 @@ class PaymentController
         $currencyId = htmlspecialchars($_POST['currencyId']);
         $price = htmlspecialchars($_POST['price']);
         $paymentDate = htmlspecialchars($_POST['paymentDate']);
+
+        $this->validateInputField($reservationId, $currencyId, $price, $paymentDate);
         $this->paymentRepository->update(intval($reservationId), intval($currencyId), floatval($price), $paymentDate);
 
         header("Location: ../Controllers/PaymentController.php?PaymentLists");

@@ -11,7 +11,7 @@
 
 <body>
     <nav class='navbar navbar-expand-sm bg-dark navbar-dark' id="navigation-placeholder">
-        <?php include_once "Navigations.php"; ?>
+    <?php include_once "navigation.php"; ?>
     </nav>
 
     <main>
@@ -42,7 +42,6 @@
                                     <div id='form-container'>
                                         <form id='delete-form' method='POST'>
                                             <p class='text-center'>Are you sure you want to delete this country?</p>
-                                            <input type='hidden' name='currencyId' value="<?php $currency->getId(); ?>">
                                             <input type='submit' name='delete' value='Delete'>
                                             <input type='button' name='cancel' value='Cancel' onclick='hideDeletePopup()'>
                                         </form>

@@ -6,5 +6,5 @@ include_once "BaseName.php";
 
 class RoomType extends BaseName
 {
-
+  
 }

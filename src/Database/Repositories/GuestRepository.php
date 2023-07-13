@@ -13,25 +13,17 @@ class GuestRepository
 
     public function create(string $firstName, string $lastName, string $egn, string $phoneNumber, int $countryId, int $cityId): Guest
     {
-        $guests = new Guest();
-        $guests->setFirstName($firstName);
-        $guests->setLastName($lastName);
-        $guests->setEgn($egn);
-        $guests->setPhoneNumber($phoneNumber);
-        $guests->setCountryId($countryId);
-        $guests->setCityId($cityId);
-
         $query = "INSERT INTO guests (first_name, last_name, egn, phone_number,  country_id, city_id) 
      VALUES (:firstName, :lastName, :egn, :phoneNumber, :countryId, :cityId)";
 
         $connection = $this->database->getConnection();
         $statement = $connection->prepare($query);
-        $statement->bindParam(':firstName', $guests->getFirstName());
-        $statement->bindParam(':lastName', $guests->getLastName());
-        $statement->bindParam(':egn', $guests->getEgn());
-        $statement->bindParam(':phoneNumber', $guests->getPhoneNumber());
-        $statement->bindParam(':countryId', $guests->getCountryId());
-        $statement->bindParam(':cityId', $guests->getCityId());
+        $statement->bindParam(':firstName', $firstName);
+        $statement->bindParam(':lastName', $lastName);
+        $statement->bindParam(':egn', $egn);
+        $statement->bindParam(':phoneNumber', $phoneNumber);
+        $statement->bindParam(':countryId', $countryId);
+        $statement->bindParam(':cityId', $cityId);
         $statement->execute();
 
         $id = $connection->lastInsertId();

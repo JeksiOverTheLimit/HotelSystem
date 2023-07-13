@@ -17,6 +17,7 @@ include_once "../Database/Repositories/EmployeeRepository.php";
 include_once "../Models/Employee.php";
 include_once "../Database/Repositories/PaymentRepository.php";
 include_once "../Models/Payment.php";
+include_once "../Services/CountryValidationService.php";
 
 $callController = new CountryController();
 
@@ -29,6 +30,7 @@ class CountryController
     private ReservationGuestRepository $reservationGuestRepository;
     private EmployeeRepository $employeeRepository;
     private PaymentRepository $paymentRepository;
+    private CountryValidationService $countryValidationService;
 
     public function __construct()
     {
@@ -39,6 +41,7 @@ class CountryController
         $this->reservationGuestRepository = new ReservationGuestRepository();
         $this->employeeRepository = new EmployeeRepository();
         $this->paymentRepository = new PaymentRepository();
+        $this->countryValidationService = new CountryValidationService();
 
         switch (true) {
             case isset($_POST['submit']):
@@ -63,7 +66,7 @@ class CountryController
     }
      
     private function showCreateCountryPage(){
-        require_once '../Views/Country.php';
+        require_once '../Views/country.php';
     }
 
     private function showUpdatePage(){
@@ -80,17 +83,22 @@ class CountryController
             return '';
         }
 
-        $name = htmlspecialchars($_POST['name']);
-
+        $name = isset($_POST['name']) ? htmlspecialchars($_POST['name']) : '';
+        
+        $this->validateCountryInputField($name);
         $this->countryRepository->create($name);
 
         header("Location: CountryController.php?CountryList");
     }
 
+    private function validateCountryInputField($name){
+      $this->countryValidationService->validateCountryName($name);
+    }
+
     private function showAllCountries(): void
     {
         $countries = $this->countryRepository->getAllCountries();
-        require_once '../Views/CountryList.php';
+        require_once '../Views/country_list.php';
                        
     }
 
@@ -113,6 +121,7 @@ class CountryController
         $countryId = intval($_POST['countryId']);
         $name = htmlspecialchars($_POST['name']);
 
+        $this->validateCountryInputField($name);
         $this->countryRepository->update($countryId, $name);
 
         header("Location: CountryController.php?CountryList");

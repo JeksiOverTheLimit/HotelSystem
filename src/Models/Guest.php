@@ -66,9 +66,6 @@ class Guest extends BaseModel
 
     public function setPhoneNumber(string $value): void
     {
-        if (strlen($value) !== 10) {
-            throw new Exception('Невалидна дължина на Телефонен Номер');
-        }
         $this->phoneNumber = $value;
     }
 
@@ -79,9 +76,6 @@ class Guest extends BaseModel
 
     public function setCountryId(int $value): void
     {
-        if (empty($value)) {
-            throw new Exception("Полето Country Не може да не е изрбано");
-        }
         $this->countryId = $value;
     }
 
@@ -92,9 +86,6 @@ class Guest extends BaseModel
 
     public function setCityId(int $value): void
     {
-        if (empty($value)) {
-            throw new Exception("Полето City Не може да не е изрбано");
-        }
         $this->cityId = $value;
     }
 }
